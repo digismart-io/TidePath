@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Programs | TidePath Family Alliance</title>
+<meta name="description" content="TidePath Family Alliance programs: mentoring, family counseling, and safety and mental health workshops for Miami-Dade kids and families in Little Havana and West Little River, in English, Spanish and Haitian Creole.">
+<link rel="icon" href="assets/tidepath-mark.svg" type="image/svg+xml">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter+Tight:wght@400;500;600;700&display=swap');
+h1,h2,h3,h4,h5,h6{color:inherit}
+body:has(.tp){margin:0}
+.tp{--ink:#0B1B2B;--ink-2:#132A40;--ink-3:#1E3A55;--line-d:#2B4762;--orange:#FF5A1F;--orange-d:#E64A12;--lime:#CAD8E4;--blue:#1F5BFF;--paper:#FFFFFF;--mist:#F2F4F7;--line:#DDE2E8;--text:#0B1B2B;--muted:#4A5868;--muted-d:#B9C6D3;
+  font-family:'Inter Tight',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:17px;line-height:1.6;color:var(--text);background:var(--paper);-webkit-font-smoothing:antialiased;overflow-x:clip}
+.tp *{box-sizing:border-box}
+.tp a{color:inherit}
+.tp p{margin:0}
+.tp h1,.tp h2,.tp h3,.tp h4{margin:0;font-family:'Bricolage Grotesque','Inter Tight',system-ui,sans-serif;font-weight:700;letter-spacing:-.025em;line-height:1.02}
+.tp ul{margin:0;padding:0}
+.tp figure{margin:0}
+.tp .tp-wrap{width:min(1280px,100% - 48px);margin-inline:auto}
+.tp .tp-ic{width:22px;height:22px;flex:none}
+.tp .tp-ic-sm{width:18px;height:18px;flex:none}
+.tp .tp-ic-xs{width:15px;height:15px;flex:none}
+.tp .tp-ic-lg{width:34px;height:34px}
+.tp :focus-visible{outline:3px solid var(--orange);outline-offset:3px;border-radius:6px}
+.tp .tp-skip{position:absolute;left:-999px;top:8px;background:#fff;padding:10px 14px;border-radius:8px;z-index:60}
+.tp .tp-skip:focus{left:12px}
+.tp [hidden]{display:none!important}
+
+/* header */
+.tp .tp-header{background:rgba(255,255,255,.92);backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30}
+.tp .tp-header .tp-wrap{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:72px}
+.tp .tp-logo{display:flex;align-items:center;gap:11px;text-decoration:none}
+.tp .tp-logo svg{width:38px;height:38px;flex:none}
+.tp .tp-logo-text{display:flex;flex-direction:column;line-height:1}
+.tp .tp-logo-text b{font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.03em}
+.tp .tp-logo-text small{font-size:10.5px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.tp .tp-nav{margin-left:auto}
+.tp .tp-nav ul{list-style:none;display:flex;gap:2px}
+.tp .tp-nav a{display:block;text-decoration:none;font-weight:600;font-size:15.5px;color:var(--muted);padding:10px 14px;position:relative;transition:color .2s}
+.tp .tp-nav a:hover{color:var(--ink)}
+.tp .tp-nav a[aria-current="page"]{color:var(--ink)}
+.tp .tp-nav a[aria-current="page"]::after{content:"";position:absolute;left:14px;right:14px;bottom:2px;height:3px;background:var(--orange);border-radius:2px}
+.tp .tp-menu{display:inline-flex;padding:11px 18px;font-size:15px}
+
+/* buttons */
+.tp .tp-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;font:inherit;font-weight:700;font-size:16px;letter-spacing:-.005em;text-decoration:none;border-radius:10px;padding:15px 22px;border:2px solid transparent;cursor:pointer;transition:transform .18s ease,background .2s,color .2s,border-color .2s,box-shadow .2s}
+.tp .tp-btn svg{transition:transform .2s ease}
+.tp .tp-btn:hover svg{transform:translateX(3px)}
+.tp .tp-btn-main{background:var(--orange);color:var(--ink)}
+.tp .tp-btn-main:hover{background:#FF7440;transform:translateY(-2px);box-shadow:0 12px 24px -12px rgba(255,90,31,.7)}
+.tp .tp-btn-ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.45)}
+.tp .tp-btn-ghost:hover{border-color:#fff;background:rgba(255,255,255,.08)}
+.tp .tp-btn-soft{background:var(--ink);color:#fff}
+.tp .tp-btn-soft:hover{background:var(--orange);color:var(--ink);transform:translateY(-2px)}
+.tp .tp-btn-ink{background:var(--ink);color:#fff}
+.tp .tp-btn-ink:hover{background:#000;transform:translateY(-2px)}
+.tp .tp-btn-line{background:transparent;color:var(--ink);border-color:var(--ink)}
+.tp .tp-btn-line:hover{background:var(--ink);color:#fff}
+
+/* eyebrow / chips */
+.tp .tp-eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--orange-d)}
+.tp .tp-eyebrow::before{content:"";width:9px;height:9px;border-radius:2px;background:var(--orange)}
+.tp .tp-langs-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tp .tp-lang-chip{display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:7px 14px;font-weight:600;font-size:14.5px;color:#fff}
+.tp .tp-lang-chip svg{color:var(--lime)}
+
+/* hero */
+.tp .tp-hero{background:var(--ink);color:#fff;position:relative;overflow:hidden}
+.tp .tp-hero-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);min-height:640px}
+.tp .tp-hero-copy{padding:88px 56px 88px max(24px,calc((100vw - 1280px)/2));align-self:center}
+.tp .tp-hero .tp-eyebrow{color:var(--lime)}
+.tp .tp-hero .tp-eyebrow::before{background:var(--lime)}
+.tp .tp-hero h1{font-size:clamp(44px,5.2vw,76px);font-weight:800;margin:20px 0 24px;letter-spacing:-.04em;line-height:.98;max-width:14.5ch}
+.tp .tp-hero h1 em{font-style:normal;color:var(--orange)}
+.tp .tp-lead{font-size:clamp(17px,1.35vw,20px);line-height:1.55;max-width:52ch}
+.tp .tp-hero .tp-lead{color:#C9D5E1}
+.tp .tp-hero .tp-langs-row{margin-top:26px}
+.tp .tp-hero-cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+.tp .tp-hero-bg{position:relative;display:block;min-height:100%}
+.tp .tp-hero-bg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 40%;display:block}
+.tp .tp-hero-bg::after{content:"";position:absolute;left:0;top:0;bottom:0;width:120px;background:linear-gradient(90deg,var(--ink),rgba(11,27,43,0))}
+
+/* stats band */
+.tp .tp-stats{background:var(--lime);color:var(--ink)}
+.tp .tp-stats-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.1fr);gap:0}
+.tp .tp-stat{padding:30px 28px 30px 0;display:flex;flex-direction:column;gap:6px;border-right:1px solid rgba(11,27,43,.18);padding-left:28px}
+.tp .tp-stat:first-child{padding-left:0}
+.tp .tp-stat:last-child{border-right:0}
+.tp .tp-stat b{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(46px,5vw,72px);font-weight:800;letter-spacing:-.05em;line-height:.9;display:flex;align-items:flex-start;gap:8px}
+.tp .tp-stat b small{font-family:'Inter Tight',sans-serif;font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-top:6px}
+.tp .tp-stat span{font-weight:600;font-size:15.5px;line-height:1.35;max-width:22ch}
+.tp .tp-stat-where{flex-direction:row;align-items:center;gap:10px}
+.tp .tp-stat-where span{font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.15;max-width:none}
+.tp .tp-stat-where svg{width:26px;height:26px}
+
+/* jump nav */
+.tp .tp-jump{padding:0;border-bottom:1px solid var(--line)}
+.tp .tp-jump ul{list-style:none;display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
+.tp .tp-jump li+li{border-left:1px solid var(--line)}
+.tp .tp-jump a{display:flex;align-items:center;gap:12px;text-decoration:none;font-weight:600;font-size:15.5px;padding:22px 20px;height:100%;transition:background .2s,color .2s;line-height:1.25}
+.tp .tp-jump li:first-child a{padding-left:0}
+.tp .tp-jump a:hover{color:var(--orange-d)}
+.tp .tp-jnum{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:15px;color:var(--orange-d);letter-spacing:-.02em}
+.tp .tp-jarrow{margin-left:auto;transform:rotate(90deg);color:var(--muted);transition:transform .2s}
+.tp .tp-jump a:hover .tp-jarrow{transform:rotate(90deg) translateX(3px);color:var(--orange-d)}
+
+/* main */
+.tp .tp-main{padding:80px 0 100px;background:var(--paper)}
+.tp .tp-layout{display:grid;grid-template-columns:minmax(0,62fr) minmax(0,38fr);gap:56px;align-items:start}
+.tp .tp-sec-head{margin-bottom:40px}
+.tp .tp-sec-head h2{font-size:clamp(36px,4vw,56px);font-weight:800;margin-top:14px;letter-spacing:-.04em}
+.tp .tp-sec-head p{color:var(--muted);margin-top:16px;max-width:60ch;font-size:18px}
+.tp .tp-programs{display:flex;flex-direction:column;gap:40px}
+
+/* cards */
+.tp .tp-card{--accent:var(--orange);background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;scroll-margin-top:96px;transition:box-shadow .3s,transform .3s}
+.tp .tp-card:hover{box-shadow:0 30px 60px -40px rgba(11,27,43,.45)}
+.tp .tp-card > :not(.tp-card-photo){margin-left:32px;margin-right:32px}
+.tp .tp-card-photo{position:relative;aspect-ratio:16/9;overflow:hidden;background:var(--ink)}
+.tp .tp-card-photo img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .7s cubic-bezier(.2,.7,.2,1)}
+.tp .tp-card:hover .tp-card-photo img{transform:scale(1.04)}
+.tp .tp-card-photo::after{content:"";position:absolute;inset:55% 0 0 0;background:linear-gradient(0deg,rgba(11,27,43,.55),rgba(11,27,43,0))}
+.tp .tp-card-num{position:absolute;left:24px;bottom:16px;z-index:1;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:64px;line-height:1;letter-spacing:-.05em;color:#fff}
+.tp .tp-card-head{display:flex;align-items:center;gap:16px;margin-top:28px}
+.tp .tp-badge{width:52px;height:52px;border-radius:10px;display:grid;place-items:center;background:var(--accent);color:var(--ink);flex:none}
+.tp .tp-badge-ic{width:26px;height:26px}
+.tp .tp-tone-teal{--accent:var(--orange)}
+.tp .tp-tone-coral{--accent:var(--lime)}
+.tp .tp-tone-sea{--accent:#7FB2FF}
+.tp .tp-tone-sun{--accent:#FFC23D}
+.tp .tp-cat{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.tp .tp-card h3{font-size:clamp(28px,2.6vw,38px);font-weight:800;letter-spacing:-.035em;margin-top:4px}
+.tp .tp-desc{margin-top:18px;font-size:18px;line-height:1.55;color:#24364A;max-width:62ch}
+.tp .tp-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;margin:26px 32px 0;border-top:1px solid var(--line)}
+.tp .tp-fact{padding:16px 18px 16px 0;border-bottom:1px solid var(--line)}
+.tp .tp-fact:nth-child(even){padding-left:18px;border-left:1px solid var(--line)}
+.tp .tp-fact:last-child:nth-child(odd){grid-column:1/-1}
+.tp .tp-fact dt{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);background:var(--mist);border-radius:999px;padding:5px 11px 5px 9px}
+.tp .tp-fic{width:15px;height:15px;color:var(--orange-d)}
+.tp .tp-fact dd{margin:10px 0 0;font-size:16px;line-height:1.5;color:#24364A}
+.tp .tp-more{margin-top:8px;border-bottom:1px solid var(--line)}
+.tp .tp-more summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;padding:18px 0;font-weight:700;font-size:16px}
+.tp .tp-more summary::-webkit-details-marker{display:none}
+.tp .tp-more summary:hover{color:var(--orange-d)}
+.tp .tp-chev{width:28px;height:28px;padding:5px;border-radius:8px;background:var(--mist);transition:transform .25s,background .2s}
+.tp .tp-more[open] .tp-chev{transform:rotate(180deg);background:var(--lime)}
+.tp .tp-more-body{padding:4px 0 24px;display:grid;gap:14px}
+.tp .tp-more-row{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px}
+.tp .tp-more h4{font-family:'Inter Tight',sans-serif;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);line-height:1.5;padding-top:3px}
+.tp .tp-more-row p{font-size:16px;color:#24364A}
+.tp .tp-more-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:6px}
+.tp .tp-more-cols > div{background:var(--mist);border-radius:10px;padding:18px}
+.tp .tp-more-cols h4{margin-bottom:10px}
+.tp .tp-more-cols ul{list-style:none;display:grid;gap:8px}
+.tp .tp-more-cols li{position:relative;padding-left:18px;font-size:15.5px;line-height:1.45}
+.tp .tp-more-cols li::before{content:"";position:absolute;left:0;top:.5em;width:8px;height:8px;border-radius:2px;background:var(--orange)}
+.tp .tp-reg-link{margin-top:24px;margin-bottom:32px}
+
+/* aside + form */
+.tp .tp-aside{position:sticky;top:92px;display:flex;flex-direction:column;gap:16px;max-height:calc(100vh - 108px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#9AA8B6 transparent;border-radius:12px}
+.tp .tp-formcard{background:var(--ink);color:#fff;border-radius:12px;overflow:hidden;scroll-margin-top:96px;box-shadow:0 40px 80px -40px rgba(11,27,43,.6)}
+.tp .tp-form-top{padding:30px 30px 6px;position:relative}
+.tp .tp-form-top::before{content:"";position:absolute;left:0;top:0;right:0;height:6px;background:linear-gradient(90deg,var(--orange) 0 60%,var(--lime) 60% 100%)}
+.tp .tp-cat-light{color:var(--lime)}
+.tp .tp-form-top h2{font-size:clamp(30px,2.6vw,40px);font-weight:800;margin:10px 0 12px;letter-spacing:-.035em}
+.tp .tp-form-top p:last-child{color:var(--muted-d);font-size:15.5px;line-height:1.5}
+.tp .tp-form{padding:22px 30px 30px;display:grid;gap:18px}
+.tp .tp-field{border:0;margin:0;padding:0;min-width:0;display:grid;gap:8px}
+.tp .tp-field label,.tp .tp-field legend{font-size:14px;font-weight:600;color:#E6EDF4;padding:0}
+.tp .tp-field legend{margin-bottom:8px}
+.tp .tp-req{color:var(--orange)}
+.tp .tp-form input[type=text],.tp .tp-form input[type=tel],.tp .tp-form input[type=email],.tp .tp-form input[type=number],.tp .tp-form select{width:100%;font:inherit;font-size:16px;color:#fff;background:var(--ink-2);border:1.5px solid var(--line-d);border-radius:8px;padding:13px 14px;transition:border-color .2s,background .2s,box-shadow .2s;appearance:none;-webkit-appearance:none}
+.tp .tp-form input::placeholder{color:#7F93A8}
+.tp .tp-form input:hover,.tp .tp-form select:hover{border-color:#3F6080}
+.tp .tp-form input:focus,.tp .tp-form select:focus{outline:none;border-color:var(--orange);background:#16304A;box-shadow:0 0 0 3px rgba(255,90,31,.25)}
+.tp .tp-form select option{color:var(--ink);background:#fff}
+.tp .tp-select{position:relative}
+.tp .tp-select select{padding-right:42px;cursor:pointer}
+.tp .tp-sel-ic{position:absolute;right:13px;top:50%;width:20px;height:20px;transform:translateY(-50%);pointer-events:none;color:var(--lime)}
+.tp .tp-hint{font-size:13.5px;color:var(--muted-d);line-height:1.45}
+.tp .tp-hint:empty{display:none}
+.tp .tp-row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.tp .tp-choice{display:flex;align-items:flex-start;gap:12px;background:var(--ink-2);border:1.5px solid var(--line-d);border-radius:8px;padding:12px 14px;cursor:pointer;transition:border-color .2s,background .2s}
+.tp .tp-choice + .tp-choice{margin-top:8px}
+.tp .tp-choice:hover{border-color:#3F6080}
+.tp .tp-choice:has(input:checked){border-color:var(--lime);background:#17324B}
+.tp .tp-choice input,.tp .tp-consent input{accent-color:var(--orange);width:18px;height:18px;margin:3px 0 0;flex:none}
+.tp .tp-choice span{display:flex;flex-direction:column;line-height:1.3;font-size:15px}
+.tp .tp-choice small{color:var(--muted-d);font-size:13.5px;margin-top:3px}
+.tp .tp-note{display:flex;gap:12px;align-items:flex-start;background:rgba(202,216,228,.08);border:1px solid rgba(202,216,228,.4);border-radius:8px;padding:14px 16px;font-size:14.5px;line-height:1.5;color:#E6EDF4}
+.tp .tp-note svg{color:var(--lime);margin-top:2px}
+.tp .tp-langs{display:flex;flex-wrap:wrap;gap:8px}
+.tp .tp-pill{position:relative;cursor:pointer}
+.tp .tp-pill input{position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;cursor:pointer}
+.tp .tp-pill span{display:inline-block;padding:9px 15px;border-radius:999px;border:1.5px solid var(--line-d);background:var(--ink-2);font-weight:600;font-size:14.5px;transition:all .2s}
+.tp .tp-pill:hover span{border-color:#3F6080}
+.tp .tp-pill input:checked + span{background:var(--lime);border-color:var(--lime);color:var(--ink)}
+.tp .tp-pill input:focus-visible + span{outline:3px solid var(--orange);outline-offset:2px}
+.tp .tp-consent{display:flex;gap:12px;align-items:flex-start;font-size:14px;line-height:1.5;color:#D3DDE7;cursor:pointer}
+.tp .tp-error{background:#FFE4DA;color:#8A1F00;border-radius:8px;padding:11px 14px;font-size:14.5px;font-weight:600}
+.tp [aria-invalid="true"]{border-color:#FF8A65!important}
+.tp .tp-submit{width:100%;padding:17px 22px;font-size:17px}
+.tp .tp-fine{display:flex;align-items:center;justify-content:center;gap:8px;font-size:13.5px;color:var(--muted-d);text-align:center}
+.tp .tp-fine svg{color:var(--lime)}
+.tp .tp-done{padding:36px 30px 34px;text-align:left}
+.tp .tp-done-ic{display:grid;place-items:center;width:56px;height:56px;border-radius:12px;background:var(--lime);color:var(--ink)}
+.tp .tp-done-ic svg{width:28px;height:28px}
+.tp .tp-done h3{font-size:34px;font-weight:800;margin:18px 0 10px}
+.tp .tp-done p{color:#D3DDE7}
+.tp .tp-done .tp-btn-soft{margin-top:22px;background:#fff;color:var(--ink)}
+.tp .tp-done .tp-btn-soft:hover{background:var(--orange)}
+.tp .tp-aside-help{display:flex;gap:12px;align-items:flex-start;font-size:15px;color:var(--muted);padding:4px 6px;line-height:1.5}
+.tp .tp-aside-help svg{color:var(--orange-d);margin-top:3px;width:20px;height:20px;flex:none}
+
+/* band */
+.tp .tp-band{position:relative;isolation:isolate;overflow:hidden;color:#fff;padding:130px 0;background:var(--ink)}
+.tp .tp-band-bg{position:absolute;top:0;bottom:0;left:42%;width:58%;height:100%;object-fit:cover;object-position:50% 35%;z-index:-2}
+.tp .tp-band-shade{position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,var(--ink) 0%,var(--ink) 42%,rgba(11,27,43,0) 56%)}
+.tp .tp-band-copy > *{max-width:560px}
+.tp .tp-band .tp-eyebrow{color:var(--lime)}
+.tp .tp-band .tp-eyebrow::before{background:var(--lime)}
+.tp .tp-band h2{font-size:clamp(40px,5vw,72px);font-weight:800;letter-spacing:-.045em;margin:18px 0 20px}
+.tp .tp-band-copy p:not(.tp-eyebrow){color:#D3DDE7;font-size:18px}
+.tp .tp-band-chips{margin-top:26px}
+.tp .tp-band .tp-lang-chip{background:rgba(11,27,43,.5);backdrop-filter:blur(6px)}
+
+/* cta */
+.tp .tp-cta{background:var(--orange);color:var(--ink);padding:96px 0}
+.tp .tp-cta-inner{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:56px;align-items:end}
+.tp .tp-cta h2{font-size:clamp(40px,5.2vw,76px);font-weight:800;letter-spacing:-.045em;line-height:.98}
+.tp .tp-cta-side p{font-size:18px;font-weight:500;line-height:1.5}
+.tp .tp-cta .tp-hero-cta{margin-top:24px}
+
+/* footer */
+.tp .tp-footer{background:var(--ink);color:#C9D5E1;padding:64px 0 40px;font-size:15px}
+.tp .tp-footer .tp-wrap{display:grid;grid-template-columns:1.4fr 1fr;gap:40px}
+.tp .tp-footer .tp-logo{color:#fff}
+.tp .tp-footer .tp-logo-text small{color:var(--muted-d)}
+.tp .tp-footer p{margin-top:16px;max-width:52ch}
+.tp .tp-foot-contact{display:flex;flex-direction:column;gap:6px}
+.tp .tp-foot-contact b{color:#fff;font-family:'Bricolage Grotesque',sans-serif;font-size:20px;letter-spacing:-.02em;margin-bottom:6px}
+.tp .tp-demo{grid-column:1/-1;border-top:1px solid var(--line-d);padding-top:22px;margin-top:8px!important;font-size:13px;color:#8FA3B7;max-width:none!important}
+
+/* mobile register bar */
+.tp .tp-mbar{display:none}
+
+@media (max-width:1100px){
+  .tp .tp-nav{display:none}
+  .tp .tp-layout{grid-template-columns:minmax(0,1fr);gap:56px}
+  .tp .tp-aside{position:static;max-height:none;overflow:visible}
+  .tp .tp-hero-grid{grid-template-columns:minmax(0,1fr)}
+  .tp .tp-hero-copy{padding:64px 24px 48px}
+  .tp .tp-hero-bg{aspect-ratio:16/10;min-height:0}
+  .tp .tp-hero-bg::after{display:none}
+  .tp .tp-stats-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .tp .tp-stat-where{grid-column:1/-1;border-top:1px solid rgba(11,27,43,.18);padding:18px 0!important}
+  .tp .tp-stat:nth-child(3){border-right:0}
+  .tp .tp-jump ul{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tp .tp-jump li:nth-child(3){border-left:0}
+  .tp .tp-jump li:nth-child(n+3){border-top:1px solid var(--line)}
+  .tp .tp-jump li:nth-child(3) a{padding-left:0}
+  .tp .tp-cta-inner{grid-template-columns:minmax(0,1fr);gap:24px}
+  .tp .tp-band-bg{left:0;width:100%}
+  .tp .tp-band-shade{background:linear-gradient(90deg,rgba(11,27,43,.95) 0%,rgba(11,27,43,.8) 50%,rgba(11,27,43,.35) 100%)}
+}
+@media (max-width:640px){
+  .tp{font-size:16px}
+  .tp .tp-wrap{width:min(1280px,100% - 40px)}
+  .tp .tp-header .tp-wrap{min-height:64px}
+  .tp .tp-logo svg{width:34px;height:34px}
+  .tp .tp-logo-text b{font-size:20px}
+  .tp .tp-menu{padding:10px 14px;font-size:14.5px}
+  .tp .tp-menu svg{display:none}
+  .tp .tp-hero-copy{padding:44px 20px 36px}
+  .tp .tp-hero h1{font-size:44px;margin:16px 0 18px}
+  .tp .tp-hero-cta .tp-btn{flex:1 1 100%}
+  .tp .tp-hero-bg{aspect-ratio:9/10}
+  .tp .tp-stats-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .tp .tp-stat{padding:22px 10px 20px 12px}
+  .tp .tp-stat:first-child{padding-left:0}
+  .tp .tp-stat b{font-size:42px;flex-direction:column;gap:2px}
+  .tp .tp-stat b small{font-size:10.5px;margin:0;order:-1}
+  .tp .tp-stat span{font-size:13.5px}
+  .tp .tp-stat-where span{font-size:18px}
+  .tp .tp-jump ul{grid-template-columns:minmax(0,1fr)}
+  .tp .tp-jump li+li{border-left:0;border-top:1px solid var(--line)}
+  .tp .tp-jump a,.tp .tp-jump li:nth-child(3) a{padding:16px 0}
+  .tp .tp-main{padding:56px 0 72px}
+  .tp .tp-sec-head h2{font-size:38px}
+  .tp .tp-card > :not(.tp-card-photo){margin-left:20px;margin-right:20px}
+  .tp .tp-facts{margin:22px 20px 0;grid-template-columns:minmax(0,1fr)}
+  .tp .tp-fact,.tp .tp-fact:nth-child(even){padding:14px 0;border-left:0}
+  .tp .tp-card-num{font-size:48px;left:18px;bottom:12px}
+  .tp .tp-card h3{font-size:30px}
+  .tp .tp-desc{font-size:17px}
+  .tp .tp-more-row{grid-template-columns:minmax(0,1fr);gap:4px}
+  .tp .tp-more-cols{grid-template-columns:minmax(0,1fr)}
+  .tp .tp-reg-link{width:calc(100% - 40px)}
+  .tp .tp-form-top{padding:28px 22px 4px}
+  .tp .tp-form{padding:20px 22px 26px}
+  .tp .tp-row2{grid-template-columns:minmax(0,1fr)}
+  .tp .tp-band{padding:0 0 64px}
+  .tp .tp-band-bg{position:relative;left:0;width:100%;height:300px;z-index:0;object-position:60% 30%}
+  .tp .tp-band-shade{inset:0 0 auto 0;height:300px;z-index:1;background:linear-gradient(0deg,rgba(11,27,43,1) 0%,rgba(11,27,43,0) 45%)}
+  .tp .tp-band-copy{position:relative;z-index:2;margin-top:-24px}
+  .tp .tp-band h2{font-size:40px}
+  .tp .tp-cta{padding:64px 0 88px}
+  .tp .tp-cta h2{font-size:42px}
+  .tp .tp-cta .tp-btn{flex:1 1 100%}
+  .tp .tp-footer{padding-bottom:96px}
+  .tp .tp-footer .tp-wrap{grid-template-columns:minmax(0,1fr)}
+  .tp .tp-mbar{display:flex;position:fixed;left:16px;right:16px;bottom:16px;z-index:40;align-items:center;justify-content:center;gap:10px;background:var(--orange);color:var(--ink);font-weight:700;font-size:16px;text-decoration:none;padding:15px 20px;border-radius:10px;box-shadow:0 16px 30px -12px rgba(11,27,43,.5);transition:transform .3s ease}
+  .tp .tp-mbar.is-hidden{transform:translateY(160%)}
+}
+@media (prefers-reduced-motion:reduce){.tp *{transition:none!important;scroll-behavior:auto!important}}
+
+.tp button:disabled{opacity:.55;cursor:not-allowed}.tp .tp-foot-contact a{color:inherit;text-underline-offset:4px}
+</style>
+
+.tp button:disabled{opacity:.55;cursor:not-allowed}.tp .tp-foot-contact a{color:inherit;text-underline-offset:4px}
+</style>
+</head>
+<body>
+<div class="tp">
+<a class="tp-skip" href="#tp-programs">Skip to programs</a>
+<header class="tp-header">
+  <div class="tp-wrap">
+    <a class="tp-logo" href="#" aria-label="TidePath Family Alliance, home"><svg aria-hidden="true" focusable="false" viewBox="0 0 40 40" fill="none"><rect width="40" height="40" rx="9" fill="#FF5A1F"/><path d="M7 22.5c3.2-4 6.4-4 9.6-1s6.4 4 9.6 0 4.8-3.6 6.8-2.2" stroke="#0B1B2B" stroke-width="3.4" stroke-linecap="round"/><path d="M7 29c3.2-3 6.4-3 9.6-.6s6.4 3 9.6 0 4.8-2.6 6.8-1.6" stroke="#0B1B2B" stroke-width="2.6" stroke-linecap="round" opacity=".55"/><circle cx="27.5" cy="12" r="3.2" fill="#0B1B2B"/></svg><span class="tp-logo-text"><b>TidePath</b><small>Family Alliance</small></span></a>
+    <nav class="tp-nav" aria-label="Main">
+      <ul>
+        <li><a href="#">Home</a></li>
+        <li><a href="#">About</a></li>
+        <li><a href="#" aria-current="page">Programs</a></li>
+        <li><a href="#">Get involved</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </nav>
+    <a class="tp-btn tp-btn-main tp-menu" href="#tp-register">Register</a>
+  </div>
+</header>
+
+<main>
+<section class="tp-hero" aria-labelledby="tp-hero-title">
+  <div class="tp-hero-grid">
+    <div class="tp-hero-copy">
+      <p class="tp-eyebrow">Our programs</p>
+      <h1 id="tp-hero-title">Support for every kid, <em>and the family</em> around them</h1>
+      <p class="tp-lead">Our mission is to help Miami-Dade kids and their families stay safe, in school and supported, through mentoring, family counseling, and safety and mental health workshops.</p>
+      <div class="tp-langs-row" aria-label="Languages we serve in">
+        <span class="tp-lang-chip"><svg class="tp-ic-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 5.5h16v10H9.5L5 19.5v-4H4z"/></svg>English</span>
+        <span class="tp-lang-chip" lang="es"><svg class="tp-ic-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 5.5h16v10H9.5L5 19.5v-4H4z"/></svg>Español</span>
+        <span class="tp-lang-chip" lang="ht"><svg class="tp-ic-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 5.5h16v10H9.5L5 19.5v-4H4z"/></svg>Kreyòl ayisyen</span>
+      </div>
+      <div class="tp-hero-cta">
+        <a class="tp-btn tp-btn-main" href="#tp-register">Register for a program <svg class="tp-ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a class="tp-btn tp-btn-ghost" href="#tp-programs">Explore the programs</a>
+      </div>
+    </div>
+    <picture class="tp-hero-bg">
+      <source media="(max-width:760px)" srcset="assets/hero-mobile.jpg">
+      <img src="assets/hero.jpg" alt="A group of smiling teenagers hug each other outdoors in bright sunshine" width="1800" height="1200" fetchpriority="high">
+    </picture>
+  </div>
+</section>
+
+<section class="tp-stats" aria-label="TidePath at a glance">
+  <div class="tp-wrap tp-stats-grid">
+    <div class="tp-stat"><b><small>About</small>900</b><span>kids up to age 18 a year</span></div>
+    <div class="tp-stat"><b>150</b><span>families a year</span></div>
+    <div class="tp-stat"><b>3</b><span>languages: English, Spanish and Haitian Creole</span></div>
+    <div class="tp-stat tp-stat-where"><svg class="tp-ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 21s-6.5-6.2-6.5-11.2a6.5 6.5 0 0 1 13 0C18.5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.4"/></svg><span>Little Havana and West Little River</span></div>
+  </div>
+</section>
+
+<nav class="tp-wrap tp-jump" aria-label="Programs on this page"><ul><li><a href="#program-harbor"><span class="tp-jnum">01</span>Harbor Mentors<svg class="tp-ic-sm tp-jarrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></li><li><a href="#program-compass"><span class="tp-jnum">02</span>Family Compass<svg class="tp-ic-sm tp-jarrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></li><li><a href="#program-nextwave"><span class="tp-jnum">03</span>Next Wave Safety Labs<svg class="tp-ic-sm tp-jarrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></li><li><a href="#program-bright"><span class="tp-jnum">04</span>Bright Minds, Strong Connections<svg class="tp-ic-sm tp-jarrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></li><li><a href="#program-together"><span class="tp-jnum">05</span>Neighborhood Together</a></li></ul></nav>
+
+<div class="tp-main">
+  <div class="tp-wrap tp-layout">
+    <section id="tp-programs" aria-labelledby="tp-prog-title">
+      <div class="tp-sec-head">
+        <p class="tp-eyebrow">Five programs</p>
+        <h2 id="tp-prog-title">Find the right fit for your family</h2>
+        <p>Every program is offered in English, Spanish and Haitian Creole. Open “More details” on any program to see who leads it, how we follow through, and what we measure.</p>
+      </div>
+      <div class="tp-programs">
+<article class="tp-card tp-tone-teal" id="program-harbor" aria-labelledby="h-harbor">
+  <figure class="tp-card-photo"><img src="assets/program-harbor.jpg" alt="A mentor sits beside a student in a purple school uniform, both reading from a textbook at a shared desk" width="1100" height="720"><span class="tp-card-num" aria-hidden="true">01</span></figure>
+  <div class="tp-card-head">
+    <span class="tp-badge"><svg class="tp-badge-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="9" cy="8" r="3.2"/><path d="M3 19c.6-3.4 3-5.2 6-5.2s5.4 1.8 6 5.2"/><circle cx="17" cy="9" r="2.6"/><path d="M15.5 13.9c2.6-.2 4.8 1.4 5.5 4.6"/></svg></span>
+    <div>
+      <p class="tp-cat">Mentoring</p>
+      <h3 id="h-harbor">Harbor Mentors</h3>
+    </div>
+  </div>
+  <p class="tp-desc">A steady connection with a trusted adult. Students meet with a volunteer mentor to build confidence, set school and personal goals, and strengthen their support network.</p>
+  <dl class="tp-facts"><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c.8-4 3.6-6 7-6s6.2 2 7 6"/></svg>Audience</dt><dd>Students ages 11–14 and their guardians.</dd></div><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l9 4.5-9 4.5-9-4.5z"/><path d="M3 12l9 4.5 9-4.5"/><path d="M3 16.5L12 21l9-4.5"/></svg>Format</dt><dd>Weekly small-group mentoring with individual mentor check-ins. Each mentor supports four students.</dd></div><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Schedule</dt><dd>Tuesdays, 3:30–4:30 p.m., during the school term.</dd></div><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 21s-6.5-6.2-6.5-11.2a6.5 6.5 0 0 1 13 0C18.5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.4"/></svg>Locations</dt><dd>Bayview Middle School · Little Havana (fictional)</dd></div><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 5.5h16v10H9.5L5 19.5v-4H4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>Languages</dt><dd>English · Spanish · Haitian Creole</dd></div><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg>Capacity</dt><dd>20 students in the demonstration cohort.</dd></div><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="4" width="14" height="17" rx="2.5"/><path d="M9 4V3h6v1M8.5 11h7M8.5 15h5"/></svg>How families join</dt><dd>Guardian registration and staff-confirmed mentor assignment.</dd></div></dl>
+  <details class="tp-more">
+    <summary><span>More details</span><svg class="tp-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg></summary>
+    <div class="tp-more-body">
+      <div class="tp-more-row"><h4>Program lead</h4><p>Program manager, with an authorized session leader and volunteer coordinator.</p></div><div class="tp-more-row"><h4>Staffing</h4><p>One session leader and five screened volunteer mentors for the 20-student demo cohort.</p></div><div class="tp-more-row"><h4>Follow-through</h4><p>Two consecutive unexplained absences create an assigned family check-in.</p></div>
+      <div class="tp-more-cols">
+        <div><h4>What participants do</h4><ul><li>Personal goal check-ins</li><li>Listening and communication practice</li><li>School transitions and trusted-adult mapping</li></ul></div>
+        <div><h4>What we measure</h4><ul><li>Unique enrolled students and attended sessions</li><li>Active mentor assignments and approved volunteer hours</li><li>Paired confidence/connection self-assessments, with missing responses disclosed</li></ul></div>
+      </div>
+    </div>
+  </details>
+  <a class="tp-btn tp-btn-soft tp-reg-link" href="#tp-register" data-program="harbor">Register for this program <svg class="tp-ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+</article>
+<article class="tp-card tp-tone-coral" id="program-compass" aria-labelledby="h-compass">
+  <figure class="tp-card-photo"><img src="assets/program-compass.jpg" alt="A mother and her children sit with a counselor who is sharing an information booklet in a bright room" width="1100" height="720"><span class="tp-card-num" aria-hidden="true">02</span></figure>
+  <div class="tp-card-head">
+    <span class="tp-badge"><svg class="tp-badge-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M15.8 8.2l-2.2 5.4-5.4 2.2 2.2-5.4z"/></svg></span>
+    <div>
+      <p class="tp-cat">Family counseling</p>
+      <h3 id="h-compass">Family Compass</h3>
+    </div>
+  </div>
+  <p class="tp-desc">Confidential family counseling for children and their caregivers, coordinated by TidePath’s lead counselor. Families can request support with communication, stressful changes, and staying connected to appropriate help.</p>
+  <dl class="tp-facts"><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c.8-4 3.6-6 7-6s6.2 2 7 6"/></svg>Audience</dt><dd>Children up to age 18 and their caregivers. Eligibility and service planning are assessed by counseling staff.</dd></div><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l9 4.5-9 4.5-9-4.5z"/><path d="M3 12l9 4.5 9-4.5"/><path d="M3 16.5L12 21l9-4.5"/></svg>Format</dt><dd>Private family appointments, with the service plan and frequency determined by counseling staff.</dd></div><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Schedule</dt><dd>By appointment; availability confirmed privately by the counseling team.</dd></div><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 21s-6.5-6.2-6.5-11.2a6.5 6.5 0 0 1 13 0C18.5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.4"/></svg>Locations</dt><dd>Little Havana Family Center (fictional)<br>West Little River Community Center (fictional)</dd></div><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 5.5h16v10H9.5L5 19.5v-4H4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>Languages</dt><dd>English · Spanish · Haitian Creole</dd></div><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg>Capacity</dt><dd>Appointment availability is managed by the counseling team.</dd></div><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="4" width="14" height="17" rx="2.5"/><path d="M9 4V3h6v1M8.5 11h7M8.5 15h5"/></svg>How families join</dt><dd>Families request a private conversation with the front-desk coordinator or counseling team. No clinical intake through this page.</dd></div></dl>
+  <details class="tp-more">
+    <summary><span>More details</span><svg class="tp-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg></summary>
+    <div class="tp-more-body">
+      <div class="tp-more-row"><h4>Program lead</h4><p>Lead counselor, supervising two counselors.</p></div><div class="tp-more-row"><h4>Staffing</h4><p>The existing three-person counseling team; interpreter arrangements confirmed by staff when needed.</p></div><div class="tp-more-row"><h4>Follow-through</h4><p>Appointments and missed-appointment follow-up are handled privately in the secure counseling system.</p></div>
+      <div class="tp-more-cols">
+        <div><h4>What participants do</h4><ul><li>Private intake and service planning</li><li>Family counseling appointments</li><li>Coordination of appropriate referrals</li></ul></div>
+        <div><h4>What we measure</h4><ul><li>Only authorized aggregate service-access measures from the secure system</li><li>Any clinical measures are defined and retained by counseling staff</li></ul></div>
+      </div>
+    </div>
+  </details>
+  <a class="tp-btn tp-btn-soft tp-reg-link" href="#tp-register" data-program="compass">Register for this program <svg class="tp-ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+</article>
+<article class="tp-card tp-tone-sea" id="program-nextwave" aria-labelledby="h-nextwave">
+  <figure class="tp-card-photo"><img src="assets/program-nextwave.jpg" alt="Teenagers lean in together during a hands-on group workshop, comparing notes on cards" width="1100" height="720"><span class="tp-card-num" aria-hidden="true">03</span></figure>
+  <div class="tp-card-head">
+    <span class="tp-badge"><svg class="tp-badge-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l7.5 3v5.4c0 4.6-3.2 8.2-7.5 9.6-4.3-1.4-7.5-5-7.5-9.6V6z"/><path d="M8.8 12.2l2.2 2.2 4.4-4.6"/></svg></span>
+    <div>
+      <p class="tp-cat">Safety workshops</p>
+      <h3 id="h-nextwave">Next Wave Safety Labs</h3>
+    </div>
+  </div>
+  <p class="tp-desc">Practical school-based workshops where students identify trusted adults, practice asking for help, explore safe choices online and in their neighborhood, and learn respectful ways to handle conflict.</p>
+  <dl class="tp-facts"><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c.8-4 3.6-6 7-6s6.2 2 7 6"/></svg>Audience</dt><dd>Middle-school students ages 11–14.</dd></div><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l9 4.5-9 4.5-9-4.5z"/><path d="M3 12l9 4.5 9-4.5"/><path d="M3 16.5L12 21l9-4.5"/></svg>Format</dt><dd>Interactive classroom workshops with scenarios, discussions and short group activities.</dd></div><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Schedule</dt><dd>Bayview: Wednesdays; Riverside: Thursdays, 3:30–5:00 p.m.</dd></div><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 21s-6.5-6.2-6.5-11.2a6.5 6.5 0 0 1 13 0C18.5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.4"/></svg>Locations</dt><dd>Bayview Middle School · Little Havana (fictional)<br>Riverside Middle School · West Little River (fictional)</dd></div><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 5.5h16v10H9.5L5 19.5v-4H4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>Languages</dt><dd>English · Spanish · Haitian Creole</dd></div><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg>Capacity</dt><dd>30 demo students; Bayview capacity 15, Riverside capacity 16 including an approved transfer seat.</dd></div><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="4" width="14" height="17" rx="2.5"/><path d="M9 4V3h6v1M8.5 11h7M8.5 15h5"/></svg>How families join</dt><dd>Guardian registration into one school group; school transfers preserve earlier records.</dd></div></dl>
+  <details class="tp-more">
+    <summary><span>More details</span><svg class="tp-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg></summary>
+    <div class="tp-more-body">
+      <div class="tp-more-row"><h4>Program lead</h4><p>Program manager with school session leaders.</p></div><div class="tp-more-row"><h4>Staffing</h4><p>One authorized session leader and two volunteer facilitators per school.</p></div><div class="tp-more-row"><h4>Follow-through</h4><p>Two consecutive unexplained absences trigger an owned family check-in.</p></div>
+      <div class="tp-more-cols">
+        <div><h4>What participants do</h4><ul><li>Trusted-adult and safe-place mapping</li><li>Respectful conflict scenarios</li><li>Digital and neighborhood safety practice</li></ul></div>
+        <div><h4>What we measure</h4><ul><li>Unique students, enrollment and completed workshop attendance</li><li>Non-clinical help-seeking confidence self-assessments</li><li>Owned follow-ups and unresolved attendance issues</li></ul></div>
+      </div>
+    </div>
+  </details>
+  <a class="tp-btn tp-btn-soft tp-reg-link" href="#tp-register" data-program="nextwave">Register for this program <svg class="tp-ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+</article>
+<article class="tp-card tp-tone-sun" id="program-bright" aria-labelledby="h-bright">
+  <figure class="tp-card-photo"><img src="assets/program-bright.jpg" alt="Five teenagers sit together on a park bench outdoors, relaxed and smiling" width="1100" height="720"><span class="tp-card-num" aria-hidden="true">04</span></figure>
+  <div class="tp-card-head">
+    <span class="tp-badge"><svg class="tp-badge-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 20s-7.5-4.4-7.5-10A4.3 4.3 0 0 1 12 7.4 4.3 4.3 0 0 1 19.5 10c0 5.6-7.5 10-7.5 10z"/><path d="M8.5 11.5h2l1.2-2 1.6 4 1.1-2h1.6"/></svg></span>
+    <div>
+      <p class="tp-cat">Mental health workshops</p>
+      <h3 id="h-bright">Bright Minds, Strong Connections</h3>
+    </div>
+  </div>
+  <p class="tp-desc">Community-center education that helps young people recognize emotions, build everyday coping and communication skills, reduce stigma around seeking support, and identify trusted adults and services. Workshops are education, not individual counseling.</p>
+  <dl class="tp-facts"><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c.8-4 3.6-6 7-6s6.2 2 7 6"/></svg>Audience</dt><dd>Young people ages 11–18, with activities adapted for the group’s age range.</dd></div><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l9 4.5-9 4.5-9-4.5z"/><path d="M3 12l9 4.5 9-4.5"/><path d="M3 16.5L12 21l9-4.5"/></svg>Format</dt><dd>Facilitated group education using age-appropriate discussion, reflection and skills practice. No clinical screening is stored here.</dd></div><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Schedule</dt><dd>Little Havana: Mondays; West Little River: Fridays, 4:00–5:30 p.m.</dd></div><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 21s-6.5-6.2-6.5-11.2a6.5 6.5 0 0 1 13 0C18.5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.4"/></svg>Locations</dt><dd>Little Havana Family Center (fictional)<br>West Little River Community Center (fictional)</dd></div><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 5.5h16v10H9.5L5 19.5v-4H4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>Languages</dt><dd>English · Spanish · Haitian Creole</dd></div><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg>Capacity</dt><dd>30 demo students across two 15-person groups; each group has capacity for 20.</dd></div><div class="tp-fact"><dt><svg class="tp-fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="4" width="14" height="17" rx="2.5"/><path d="M9 4V3h6v1M8.5 11h7M8.5 15h5"/></svg>How families join</dt><dd>Guardian registration for one community-center group. Private support requests go to the counseling team.</dd></div></dl>
+  <details class="tp-more">
+    <summary><span>More details</span><svg class="tp-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg></summary>
+    <div class="tp-more-body">
+      <div class="tp-more-row"><h4>Program lead</h4><p>Lead counselor oversees workshop content; authorized facilitators deliver the educational sessions.</p></div><div class="tp-more-row"><h4>Staffing</h4><p>One session leader and two volunteer facilitators per 15-person group.</p></div><div class="tp-more-row"><h4>Follow-through</h4><p>Two consecutive unexplained absences trigger a supportive program check-in, never an inferred diagnosis.</p></div>
+      <div class="tp-more-cols">
+        <div><h4>What participants do</h4><ul><li>Naming emotions and recognizing support networks</li><li>Everyday communication and help-seeking practice</li><li>Learning when and how to approach a trusted adult</li></ul></div>
+        <div><h4>What we measure</h4><ul><li>Completed educational sessions and unique participants</li><li>Voluntary non-clinical support-confidence self-assessments</li><li>Participation follow-ups without clinical details</li></ul></div>
+      </div>
+    </div>
+  </details>
+  <a class="tp-btn tp-btn-soft tp-reg-link" href="#tp-register" data-program="bright">Register for this program <svg class="tp-ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+</article>
+<article class="tp-card tp-tone-sea" id="program-together" aria-labelledby="h-together">
+<figure class="tp-card-photo"><img src="assets/band.jpg" alt="Families gathering outdoors in their neighborhood" width="1800" height="900"><span class="tp-card-num" aria-hidden="true">05</span></figure>
+<div class="tp-card-head"><div><p class="tp-cat">Community events</p><h3 id="h-together">Neighborhood Together</h3></div></div>
+<p class="tp-desc">Welcoming neighborhood gatherings that connect children and caregivers with TidePath staff, volunteers, school resources and practical family support. Activities include back-to-school preparation, family games, resource tables and supply distribution.</p><dl class="tp-facts"><div class="tp-fact"><dt>Audience</dt><dd>Children up to age 18 and their caregivers in Little Havana and West Little River.</dd></div><div class="tp-fact"><dt>Format</dt><dd>Optional family events with supervised activities and resource tables. Child check-in is recorded separately from any adult attendance.</dd></div><div class="tp-fact"><dt>Schedule</dt><dd>Three demo Saturdays: July 25, August 22 and September 19, 10:00 a.m.–noon.</dd></div><div class="tp-fact"><dt>Locations</dt><dd>Little Havana Family Center (fictional) · West Little River Community Center (fictional)</dd></div><div class="tp-fact"><dt>Languages</dt><dd>English · Spanish · Haitian Creole</dd></div><div class="tp-fact"><dt>Capacity</dt><dd>50 registered demo children; registration capacity 60. This is not a building occupancy figure or an adult headcount.</dd></div><div class="tp-fact"><dt>How families join</dt><dd>Guardian registration or staff-assisted registration, with caregivers attending alongside children.</dd></div></dl>
+<details class="tp-more"><summary>More details</summary><div class="tp-more-body"><div class="tp-more-row"><h4>Program lead</h4><p>Volunteer coordinator, with Marisol coordinating program resources.</p></div><div class="tp-more-row"><h4>Follow-through</h4><p>Optional event nonattendance does not trigger a missed-session concern.</p></div><div class="tp-more-cols"><div><h4>What participants do</h4><ul><li>Back-to-school resource fair</li><li>Family activity morning</li><li>Neighborhood resource and supply day</li></ul></div><div><h4>What we measure</h4><ul><li>Unique registered children and child check-ins</li><li>Distinct participating households, when recorded</li><li>Approved event-helper and supply-driver hours; adult walk-ins are not inferred</li></ul></div></div></div></details>
+<a class="tp-btn tp-btn-soft tp-reg-link" href="#tp-register" data-program="together">Register for this program →</a></article>
+      </div>
+    </section>
+    <aside class="tp-aside" aria-label="Registration">
+      
+<section class="tp-formcard" id="tp-register" aria-labelledby="tp-form-title" tabindex="-1">
+  <div class="tp-form-top">
+    <p class="tp-cat tp-cat-light">One form, every program</p>
+    <h2 id="tp-form-title">Register your family</h2>
+    <p>Choose your program and language, then continue in the TidePath app to complete registration. No family details are collected on this page.</p>
+  </div>
+  <form id="tp-form" class="tp-form" novalidate>
+    <div class="tp-field"><label for="tp-program">Program</label><select id="tp-program" name="program" required aria-describedby="tp-program-hint"><option value="">Choose a program</option><option value="harbor">Harbor Mentors</option><option value="compass">Family Compass</option><option value="nextwave">Next Wave Safety Labs</option><option value="bright">Bright Minds, Strong Connections</option><option value="together">Neighborhood Together</option></select><p class="tp-hint" id="tp-program-hint" aria-live="polite"></p></div>
+    <fieldset class="tp-field" id="tp-group-nextwave" hidden><legend>School group (optional here)</legend><label class="tp-choice"><input type="radio" name="group_nextwave" value="wave-bayview"><span>Bayview Middle School<small>Little Havana · Wednesdays</small></span></label><label class="tp-choice"><input type="radio" name="group_nextwave" value="wave-riverside"><span>Riverside Middle School<small>West Little River · Thursdays</small></span></label></fieldset>
+    <fieldset class="tp-field" id="tp-group-bright" hidden><legend>Community-center group (optional here)</legend><label class="tp-choice"><input type="radio" name="group_bright" value="minds-havana"><span>Little Havana Family Center<small>Mondays</small></span></label><label class="tp-choice"><input type="radio" name="group_bright" value="minds-river"><span>West Little River Community Center<small>Fridays</small></span></label></fieldset>
+    <fieldset class="tp-field" id="tp-group-together" hidden><legend>Neighborhood group (optional here)</legend><label class="tp-choice"><input type="radio" name="group_together" value="together-havana"><span>Little Havana</span></label><label class="tp-choice"><input type="radio" name="group_together" value="together-river"><span>West Little River</span></label></fieldset>
+    <div class="tp-note" id="tp-compass-note" hidden><p><strong>Family Compass is coordinated privately.</strong> Contact the counseling team through the organization’s private intake process. This fictional demo does not collect counseling requests or clinical information.</p></div>
+    <fieldset class="tp-field"><legend>Preferred language</legend><div class="tp-langs"><label class="tp-pill"><input type="radio" name="language" value="English" checked><span>English</span></label><label class="tp-pill"><input type="radio" name="language" value="Spanish"><span lang="es">Español</span></label><label class="tp-pill"><input type="radio" name="language" value="Haitian Creole"><span lang="ht">Kreyòl ayisyen</span></label></div></fieldset>
+    <p class="tp-error" id="tp-error" role="alert" hidden></p>
+    <button type="submit" class="tp-btn tp-btn-main tp-submit">Continue to registration <svg class="tp-ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    <p class="tp-hint">You’ll enter family details in the app. This page saves no registration. All programs and records are fictional demonstrations.</p>
+    <a class="tp-btn tp-btn-ghost" href="https://tidepath-demo.go-610.workers.dev/">Open staff workspace</a>
+  </form>
+
+
+</section>
+      <p class="tp-aside-help"><svg class="tp-ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="9" cy="8" r="3.2"/><path d="M3 19c.6-3.4 3-5.2 6-5.2s5.4 1.8 6 5.2"/><circle cx="17" cy="9" r="2.6"/><path d="M15.5 13.9c2.6-.2 4.8 1.4 5.5 4.6"/></svg><span>Not sure which program fits? Choose the one closest to what you need, and our team will help you from there.</span></p>
+    </aside>
+  </div>
+</div>
+</main>
+
+<section class="tp-band" aria-labelledby="tp-band-title">
+  <img class="tp-band-bg" src="assets/band.jpg" alt="" width="1800" height="900">
+  <div class="tp-band-shade" aria-hidden="true"></div>
+  <div class="tp-wrap tp-band-copy">
+    <p class="tp-eyebrow">Your language, your family</p>
+    <h2 id="tp-band-title">In English, Spanish and Haitian Creole</h2>
+    <p>Every program is offered in English, Spanish and Haitian Creole, in Little Havana and West Little River. We reply in English, Spanish or Haitian Creole.</p>
+    <div class="tp-langs-row tp-band-chips" aria-label="Languages we serve in">
+      <span class="tp-lang-chip"><svg class="tp-ic-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 5.5h16v10H9.5L5 19.5v-4H4z"/></svg>English</span>
+      <span class="tp-lang-chip" lang="es"><svg class="tp-ic-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 5.5h16v10H9.5L5 19.5v-4H4z"/></svg>Español</span>
+      <span class="tp-lang-chip" lang="ht"><svg class="tp-ic-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 5.5h16v10H9.5L5 19.5v-4H4z"/></svg>Kreyòl ayisyen</span>
+    </div>
+  </div>
+</section>
+
+<section class="tp-cta" aria-labelledby="tp-cta-title">
+  <div class="tp-wrap tp-cta-inner">
+    <h2 id="tp-cta-title">Support for every kid, and the family around them</h2>
+    <div class="tp-cta-side">
+      <p>Not sure which program fits? Choose the one closest to what you need, and our team will help you from there.</p>
+      <div class="tp-hero-cta"><a class="tp-btn tp-btn-ink" href="#tp-register">Register for a program <svg class="tp-ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a><a class="tp-btn tp-btn-line" href="#tp-programs">Explore the programs</a></div>
+    </div>
+  </div>
+</section>
+
+<footer class="tp-footer">
+  <div class="tp-wrap">
+    <div>
+      <a class="tp-logo" href="#" aria-label="TidePath Family Alliance, home"><svg aria-hidden="true" focusable="false" viewBox="0 0 40 40" fill="none"><rect width="40" height="40" rx="9" fill="#FF5A1F"/><path d="M7 22.5c3.2-4 6.4-4 9.6-1s6.4 4 9.6 0 4.8-3.6 6.8-2.2" stroke="#0B1B2B" stroke-width="3.4" stroke-linecap="round"/><path d="M7 29c3.2-3 6.4-3 9.6-.6s6.4 3 9.6 0 4.8-2.6 6.8-1.6" stroke="#0B1B2B" stroke-width="2.6" stroke-linecap="round" opacity=".55"/><circle cx="27.5" cy="12" r="3.2" fill="#0B1B2B"/></svg><span class="tp-logo-text"><b>TidePath</b><small>Family Alliance</small></span></a>
+      <p>Helping Miami-Dade kids and their families stay safe, in school and supported. Serving Little Havana and West Little River in English, Spanish and Haitian Creole.</p>
+    </div>
+    <div class="tp-foot-contact">
+      <b>Contact</b>
+      <span>Fictional organization · demonstration</span>
+      <a href="https://tidepath-demo.go-610.workers.dev/">Open the TidePath app</a>
+      <span>Miami-Dade · Little Havana · West Little River</span>
+    </div>
+    <p class="tp-demo">TidePath Family Alliance is a fictional organization (demo). Program locations named on this page are fictional.</p>
+  </div>
+</footer>
+<a class="tp-mbar is-hidden" href="#tp-register">Register for a program <svg class="tp-ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+
+
+</div>
+<script>
+(function(){
+ const root=document.querySelector('.tp'),form=document.querySelector('#tp-form'),select=document.querySelector('#tp-program'),card=document.querySelector('#tp-register');
+ const hints={harbor:'Weekly mentoring for ages 11–14.',compass:'Private intake is managed by the counseling team, outside this demo.',nextwave:'Safety workshops for ages 11–14. Choose a school group here or in the app.',bright:'Community workshops for ages 11–18. Choose a group here or in the app.',together:'Optional family events for children up to age 18.'};
+ function update(){for(const p of ['nextwave','bright','together'])document.querySelector('#tp-group-'+p).hidden=select.value!==p;document.querySelector('#tp-compass-note').hidden=select.value!=='compass';document.querySelector('#tp-program-hint').textContent=hints[select.value]||'';form.querySelector('button[type=submit]').disabled=select.value==='compass';}
+ select.addEventListener('change',update);
+ root.querySelectorAll('.tp-reg-link').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();select.value=a.dataset.program;update();card.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});select.focus({preventScroll:true});}));
+ form.addEventListener('submit',e=>{e.preventDefault();if(!hints[select.value]||select.value==='compass'){const error=document.querySelector('#tp-error');error.hidden=false;error.textContent='Choose a participation program to continue.';return;}const program=select.value==='bright'?'brightminds':select.value;const params=new URLSearchParams({program,language:form.querySelector('input[name=language]:checked').value});const group=form.querySelector('input[name="group_'+select.value+'"]:checked');if(group)params.set('group',group.value);if(program==='harbor')params.set('group','harbor-bayview');location.assign('https://tidepath-demo.go-610.workers.dev/#register?'+params.toString());});
+ const bar=root.querySelector('.tp-mbar'),hero=root.querySelector('.tp-hero');if(bar&&'IntersectionObserver'in window){const visible={form:false,hero:true};new IntersectionObserver(entries=>{for(const e of entries)visible[e.target===card?'form':'hero']=e.isIntersecting;bar.classList.toggle('is-hidden',visible.form||visible.hero);},{threshold:0}).observe(hero);const observer=new IntersectionObserver(entries=>{for(const e of entries)visible.form=e.isIntersecting;bar.classList.toggle('is-hidden',visible.form||visible.hero);});observer.observe(card);}
+ update();
+})();
+</script>
+</body>
+</html>

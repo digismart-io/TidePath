@@ -1,5 +1,5 @@
-const CACHE='tidepath-shell-v2';
-const SHELL=['/','/index.html','/style.css','/tokens.css','/app.js','/icon.svg','/manifest.webmanifest'];
+const CACHE='tidepath-shell-v3';
+const SHELL=['/','/index.html','/style.css','/brand.css','/tokens.css','/app.js','/icon.svg','/manifest.webmanifest'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL))));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key))))));
 // Never cache API responses, guardian information, or attendance records.

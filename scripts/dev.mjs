@@ -7,7 +7,7 @@ import { openDatabase } from './sqlite.mjs';
 if(!existsSync('.local/tidepath.sqlite'))await import('./reset.mjs');
 const {DB,close}=openDatabase('.local/tidepath.sqlite');
 const root=resolve('public');
-const types={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.json':'application/json','.webmanifest':'application/manifest+json','.svg':'image/svg+xml'};
+const types={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.json':'application/json','.webmanifest':'application/manifest+json','.svg':'image/svg+xml','.jpg':'image/jpeg','.png':'image/png'};
 const env={DB,DEMO_MODE:'true',ASSETS:{async fetch(request){
   let file;try{file=resolve(root,'.'+decodeURIComponent(new URL(request.url).pathname));}catch{return new Response('Bad path',{status:400});}
   if(file!==root&&!file.startsWith(root+sep))return new Response('Not found',{status:404});

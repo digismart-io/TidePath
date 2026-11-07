@@ -6,6 +6,13 @@ A working hackathon prototype for Tidepath Family Alliance's program manager, Ma
 
 **Fictional demonstration only.** All family records, schools, assessments, contacts, passwords and volunteer histories are synthetic. Shared demo logins are for exploration, not real nonprofit operations. Counseling records, donation processing, donor CRM, grant accounting and QuickBooks remain outside this app.
 
+## Live demo
+
+- [Program workspace](https://tidepath-demo.go-610.workers.dev/)
+- [Public Programs page](https://digismart-io.github.io/TidePath/) — GitHub Pages serves `docs/` from `codex/tidepath-demo`. Its program/language chooser hands registration to the working app.
+
+The app and public page share the supplied navy/orange style with subdued blue-gray highlights. See [style reference](docs/STYLE-REFERENCE.md) and [design tokens](design.md).
+
 ## Run locally
 
 Requires Node.js 24 or newer.
