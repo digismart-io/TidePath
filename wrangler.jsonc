@@ -1,0 +1,10 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "tidepath-demo",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-11-01",
+  "assets": { "directory": "./public", "binding": "ASSETS", "run_worker_first": true },
+  "vars": { "DEMO_MODE": "true", "AI_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast" },
+  "ai": { "binding": "AI" },
+  "d1_databases": [{ "binding": "DB", "database_name": "tidepath-demo", "database_id": "aa0e78aa-8805-404c-b66c-3cfc975ec38f", "migrations_dir": "migrations" }]
+}

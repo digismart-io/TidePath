@@ -1,0 +1,19 @@
+{
+  "students": 40,
+  "guardians": 32,
+  "program_enrollments": 50,
+  "enrollment_rows": 51,
+  "sessions": 36,
+  "submitted_sessions": 33,
+  "cancelled_sessions": 1,
+  "incomplete_sessions": 2,
+  "expected_attendance": 546,
+  "attended": 496,
+  "absent": 23,
+  "excused": 27,
+  "unmarked": 31,
+  "approved_hours": 110,
+  "pending_hours": 11,
+  "assessment_pairs": 47,
+  "average_gain": 0.723404255319149
+}

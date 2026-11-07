@@ -1,0 +1,8 @@
+:root {
+ --color-paper:oklch(98% .006 155);--color-surface:oklch(100% 0 0);--color-ink:oklch(25% .025 170);--color-muted:oklch(47% .022 170);--color-rule:oklch(89% .012 155);--color-accent:oklch(33% .049 177);--color-accent-ink:oklch(99% .004 155);--color-tint:oklch(94% .023 165);--color-warning:oklch(40% .095 65);--color-warning-bg:oklch(96% .04 85);--color-error:oklch(44% .15 25);--color-error-bg:oklch(97% .017 25);--color-focus:oklch(57% .17 255);--color-blue:oklch(43% .10 250);--color-blue-bg:oklch(95% .025 245);--color-overlay:oklch(20% .02 170 / .35);
+ --font-body:'Geist',ui-sans-serif,system-ui,sans-serif;--font-display:'Geist',ui-sans-serif,system-ui,sans-serif;--font-wordmark:'Newsreader',Georgia,serif;
+ --space-xs:4px;--space-sm:8px;--space-md:12px;--space-lg:16px;--space-xl:24px;--space-2xl:32px;--space-3xl:48px;--space-4xl:64px;
+ --text-xs:.75rem;--text-sm:.875rem;--text-base:1rem;--text-lg:1.25rem;--text-xl:1.5625rem;--text-2xl:2rem;--text-display:clamp(2rem,3.5vw,3rem);
+ --radius-sm:6px;--radius-md:10px;--radius-lg:16px;--rule-width:1px;
+ --ease-out:cubic-bezier(.22,1,.36,1);--ease-in:cubic-bezier(.55,0,1,.45);--ease-in-out:cubic-bezier(.65,0,.35,1);--dur-fast:120ms;
+}
