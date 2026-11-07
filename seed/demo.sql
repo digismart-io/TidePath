@@ -155,7 +155,7 @@ INSERT INTO groups (id,program_id,name,school,neighborhood,weekday,time,capacity
 INSERT INTO staff_groups (staff_id,group_id) VALUES ('elena','harbor-bayview');
 INSERT INTO groups (id,program_id,name,school,neighborhood,weekday,time,capacity) VALUES ('wave-bayview','nextwave','Next Wave · Bayview','Bayview Middle School','Little Havana','Wednesday','3:30–5:00 p.m.',15);
 INSERT INTO staff_groups (staff_id,group_id) VALUES ('james','wave-bayview');
-INSERT INTO groups (id,program_id,name,school,neighborhood,weekday,time,capacity) VALUES ('wave-riverside','nextwave','Next Wave · Riverside','Riverside Middle School','West Little River','Thursday','3:30–5:00 p.m.',15);
+INSERT INTO groups (id,program_id,name,school,neighborhood,weekday,time,capacity) VALUES ('wave-riverside','nextwave','Next Wave · Riverside','Riverside Middle School','West Little River','Thursday','3:30–5:00 p.m.',16);
 INSERT INTO staff_groups (staff_id,group_id) VALUES ('priya','wave-riverside');
 INSERT INTO enrollments (id,student_id,group_id,start_date,end_date) VALUES ('enroll-h-1','student-001','harbor-bayview','2026-07-01',NULL);
 INSERT INTO enrollments (id,student_id,group_id,start_date,end_date) VALUES ('enroll-h-2','student-002','harbor-bayview','2026-07-01',NULL);

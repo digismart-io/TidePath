@@ -22,7 +22,7 @@ The demo uses 40 fictional students in two invented program cohorts, Harbor Ment
 
 Next Wave reflects safety and emotional wellbeing education, not digital-literacy training or clinical care. Its outcomes are fictional self-assessment scores, not clinical assessments or evidence of treatment effectiveness.
 
-Households are separate from guardians: a guardian count is not a family count. Contact language is recorded explicitly. The staff interface is English; complete localization of every screen is not claimed.
+Households are separate from guardians: a guardian count is not a family count. Contact language is recorded explicitly. The staff interface is English; complete localization of every screen is not claimed. Riverside's fictional workshop group has one approved extra seat for the school-transfer scenario, bringing its capacity to 16; Bayview's workshop capacity remains 15.
 
 ## System boundaries
 

@@ -33,7 +33,8 @@ export function generateSeed() {
   add('programs',{id:'harbor',name:'Harbor Mentors',description:'A trusted adult, a steady connection. Weekly mentoring helps students build confidence, set personal goals, and navigate school challenges.',outcome_label:'Confidence and connection to a trusted adult'});
   add('programs',{id:'nextwave',name:'Next Wave Workshops',description:'School-based safety and emotional wellbeing workshops. Students practice asking for help, recognizing trusted adults, handling conflict, and supporting one another. This educational program is separate from clinical counseling.',outcome_label:'Confidence asking for help and identifying support'});
   const groups=[['harbor-bayview','harbor','Harbor · Bayview','Bayview Middle School','Tuesday','3:30–4:30 p.m.',20,'2026-07-07','elena'],['wave-bayview','nextwave','Next Wave · Bayview','Bayview Middle School','Wednesday','3:30–5:00 p.m.',15,'2026-07-08','james'],['wave-riverside','nextwave','Next Wave · Riverside','Riverside Middle School','Thursday','3:30–5:00 p.m.',15,'2026-07-09','priya']];
-  for(const [gid,program_id,name,school,weekday,time,capacity,,owner] of groups) { add('groups',{id:gid,program_id,name,school,neighborhood:gid==='wave-riverside'?'West Little River':'Little Havana',weekday,time,capacity}); add('staff_groups',{staff_id:owner,group_id:gid}); }
+  // Riverside has one approved extra seat for the mid-quarter school transfer.
+  for(const [gid,program_id,name,school,weekday,time,capacity,,owner] of groups) { add('groups',{id:gid,program_id,name,school,neighborhood:gid==='wave-riverside'?'West Little River':'Little Havana',weekday,time,capacity:gid==='wave-riverside'?16:capacity}); add('staff_groups',{staff_id:owner,group_id:gid}); }
   const enrollments=[];
   for(let i=1;i<=20;i++) enrollments.push({id:`enroll-h-${i}`,student_id:id('student',i),group_id:'harbor-bayview',start_date:'2026-07-01',end_date:null});
   for(let i=11;i<=40;i++) {
