@@ -1,0 +1,2 @@
+ALTER TABLE programs ADD COLUMN category TEXT NOT NULL DEFAULT 'mentoring';
+ALTER TABLE programs ADD COLUMN details TEXT NOT NULL DEFAULT '{}';

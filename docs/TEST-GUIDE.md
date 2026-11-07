@@ -6,24 +6,24 @@ All names and records are fictional. Restore the seed between rehearsals if you 
 
 Sign in as Marisol. The dashboard should show:
 
-- 40 unique participants and 50 distinct program enrollments.
-- 95.6% recorded attendance, from 496 attended student-sessions / (496 attended + 23 unexplained absent).
-- 27 excused entries excluded from that denominator.
+- 100 unique participants and 130 distinct program enrollments across four participation programs, plus catalog-only counseling.
+- 95.8% regular-session attendance, from 821 attended regular sessions / (821 attended + 36 unexplained absent). There are 961 recorded visits including optional community-event check-ins.
+- 59 excused/nonattendance entries excluded from visit attendance; all optional community-event entries are excluded from the regular-session rate.
 - 2 open follow-ups.
-- 110 approved volunteer hours and 11 pending hours.
+- 200 approved volunteer hours and 17 pending hours.
 - 2 unfinished rosters with 31 unmarked entries.
-- 47 paired assessments and 3 missing end assessments.
+- 75 paired assessments and 5 missing end assessments.
 
-The school transfer produces 51 enrollment-period rows, but only 50 distinct child–program enrollments. Families and guardians are distinct concepts even though this seed has one guardian per household.
+The school transfer produces 131 enrollment-period rows, but only 130 distinct child–program enrollments. Families and guardians are distinct concepts even though this seed has one guardian per household.
 
 ## A three-minute demo
 
-1. **Start as Marisol.** Explain that she can see which families need attention without comparing lists. Open Participants and inspect Sofia Rivera: she shares Rosa Rivera as guardian with Mateo Rivera. Search for Zoe Johnson to show that her earlier Bayview workshop records remain intact after her move to Riverside.
+1. **Start as Marisol.** Open Programs to explore all five service types and their full details. Explain that she can see which families need attention without comparing lists. Open Participants and inspect Sofia Rivera: she shares Rosa Rivera as guardian with Mateo Rivera. Search for Zoe Johnson to show that her earlier Bayview workshop records remain intact after her move to Riverside.
 2. **Switch to Elena.** Sign out, choose Elena, and sign in. Only Harbor rosters are available. Open September 22, “Quarter reflection.” All 20 entries are initially unmarked, not absent.
 3. **Record attendance.** Select **Mark remaining present**, then mark **Sofia Rivera → Absent**. Select **Submit roster**. Her previous submitted mentoring session was also absent; the application creates one follow-up, owned by Marisol, due September 23. Repeated saves do not create extra tasks.
 4. **Return as Marisol.** Open Follow-ups. Sofia now appears alongside the two seeded concerns. Open her task and select **Draft message**. Her guardian's preferred contact language is Spanish. The deployed version should label successful live drafting **Workers AI**; a local/unavailable model is labeled **Template**.
 5. **Show follow-through.** Edit the draft, then **Record simulated send**. This records a demonstration event and changes the task to awaiting reply. It sends no actual message and does not resolve the concern. Record a guardian reply about transport, update the next action, and resolve only after describing the support arranged.
-6. **Show the report.** After the roster submission: 515 attended entries, 24 unexplained absences and one remaining unfinished roster. Click report metrics to show source records. Generate a quarterly narrative and explain that the database calculates the numbers while AI drafts the wording. Download evidence or print the report.
+6. **Show the report.** After the roster submission: 980 attended entries including events, 37 unexplained absences and one remaining unfinished roster. Click report metrics to show source records. Generate a quarterly narrative and explain that the database calculates the numbers while AI drafts the wording. Download evidence or print the report.
 
 ## Other useful tests
 

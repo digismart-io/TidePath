@@ -9,3 +9,6 @@
 
 html,body{overflow-x:clip}h1,h2{overflow-wrap:anywhere;min-width:0}
 @media(max-width:760px){.sticky-actions .actions{flex-wrap:wrap}.sticky-actions .btn{white-space:nowrap;font-size:var(--text-xs)}.actions .btn{white-space:nowrap}.panel-head{flex-wrap:wrap}.breadcrumb{flex-wrap:wrap;gap:var(--space-xs)}.demo-pill{white-space:nowrap}}
+
+.program-catalog{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-xl)}.program-card .program-description{margin-top:0}.program-card h2{font-size:var(--text-xl)}.program-facts{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-xl);margin:var(--space-xl) 0}.program-facts dt{font-size:var(--text-xs);color:var(--color-muted);margin-bottom:var(--space-xs)}.program-facts dd{margin:0}.dialog-body li{margin-bottom:var(--space-sm)}.dialog-body ul{padding-left:var(--space-xl);margin-bottom:var(--space-xl)}
+@media(max-width:1000px){.program-catalog{grid-template-columns:1fr}}@media(max-width:600px){.program-facts{grid-template-columns:1fr}.program-card h2{font-size:var(--text-lg)}}

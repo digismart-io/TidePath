@@ -26,15 +26,15 @@ Choose a demo role on the sign-in screen, then select **Sign in**. All four fict
 | --- | --- | --- |
 | `marisol@tidepath.example` | Program manager | Participant/family history, all rosters, follow-ups, mentors, hours and reports |
 | `elena@tidepath.example` | Session leader | Harbor Mentors, Bayview rosters only |
-| `james@tidepath.example` | Session leader | Next Wave, Bayview rosters only |
-| `priya@tidepath.example` | Session leader | Next Wave, Riverside rosters only |
+| `james@tidepath.example` | Session leader | Assigned Bayview safety, Little Havana wellbeing and community-event rosters |
+| `priya@tidepath.example` | Session leader | Assigned Riverside safety, West Little River wellbeing and community-event rosters |
 
 Roles are enforced in the Worker API, not just in the navigation. The four logins represent test roles, not TidePath's complete nine-person staffing structure. Passwords are PBKDF2 hashed; sessions are opaque, server-stored, expiring HttpOnly cookies. Public registration never returns existing family identities. Shared accounts and published demo credentials must be replaced before any real-data pilot.
 
 ## Included
 
-- Two fictional cohorts aligned with the organization's mission: Harbor Mentors and Next Wave safety/emotional wellbeing workshops.
-- Forty students, 32 households, 50 distinct child–program enrollments, nine volunteer records and 36 sessions in one fictional quarter.
+- Five complete service profiles: mentoring, family counseling, safety workshops, mental health workshops and community events. Counseling is catalog-only; its client records remain in the secure system.
+- One hundred students, 70 households, 130 distinct child–program enrollments, fifteen volunteer records and 66 sessions in one fictional quarter.
 - Separate households and guardians, preferred contact language and stable student IDs.
 - English, Spanish and Haitian Creole family registration labels and contact templates. The main staff interface is English; full localization is not claimed.
 - Phone-friendly attendance, saved drafts, complete-roster submission, correction audit history and optimistic concurrency checks.
@@ -55,7 +55,7 @@ npm run db:reset
 
 `seed/demo.sql` and `seed/expected.json` are produced by `npm run seed:generate`. The expected totals are computed independently from generated rows and checked against the report API. Integration tests cover authorization, CSRF, attendance completeness, simultaneous saves, cancellation, transfer history, hour approval, registration, follow-up lifecycle, and AI fallback.
 
-The scenario date is September 24, 2026. The report is provisional: two rosters remain unfinished and the quarter ends September 30. Actual audit/contact timestamps use server time. See [the testing and demo guide](docs/TEST-GUIDE.md).
+The scenario date is September 24, 2026. The report is provisional: two rosters remain unfinished and the quarter ends September 30. Actual audit/contact timestamps use server time. Explore [the program catalog](docs/PROGRAM-CATALOG.md). See [the testing and demo guide](docs/TEST-GUIDE.md).
 
 ## Deploy to your Cloudflare account
 
@@ -65,7 +65,7 @@ The scenario date is September 24, 2026. The report is provisional: two rosters 
 wrangler login
 wrangler d1 create tidepath-demo
 # Put the returned database_id in wrangler.jsonc before continuing.
-wrangler d1 execute tidepath-demo --remote --file migrations/0001_schema.sql
+wrangler d1 migrations apply tidepath-demo --remote
 wrangler d1 execute tidepath-demo --remote --file seed/demo.sql
 npm run deploy
 ```

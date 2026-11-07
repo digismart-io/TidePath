@@ -12,8 +12,12 @@
     "check": "node --check src/worker.js && node --check public/app.js && npm test",
     "deploy": "wrangler deploy",
     "cf:dev": "wrangler dev",
-    "cf:seed:local": "wrangler d1 execute tidepath-demo --local --file migrations/0001_schema.sql && wrangler d1 execute tidepath-demo --local --file seed/demo.sql"
+    "cf:seed:local": "wrangler d1 migrations apply tidepath-demo --local && wrangler d1 execute tidepath-demo --local --file seed/demo.sql"
   },
-  "engines": { "node": ">=24" },
-  "devDependencies": { "wrangler": "4.157.0" }
+  "engines": {
+    "node": ">=24"
+  },
+  "devDependencies": {
+    "wrangler": "4.157.0"
+  }
 }

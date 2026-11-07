@@ -44,14 +44,29 @@ async function sessionAccess(db,user,id) {
 }
 function nextWorkingDay(day){const d=new Date(day+'T12:00:00Z');do{d.setUTCDate(d.getUTCDate()+1);}while([0,6].includes(d.getUTCDay()));return d.toISOString().slice(0,10);}
 export async function reconcileFollowups(db,studentId,programId) {
-  const records=await all(db,`SELECT a.status,s.date FROM attendance a JOIN sessions s ON s.id=a.session_id JOIN groups g ON g.id=s.group_id WHERE a.student_id=? AND g.program_id=? AND s.status='submitted' ORDER BY s.date DESC,s.id DESC`,studentId,programId);
-  let count=0;for(const row of records){if(row.status!=='absent')break;count++;}
-  if(count<2)return;
-  const latest=records[0].date;
-  // An acknowledged/resolved concern is not recreated by retrying the same roster.
-  if(await first(db,"SELECT 1 FROM followups WHERE student_id=? AND program_id=? AND (status!='resolved' OR substr(created_at,1,10)>=?)",studentId,programId,latest))return;
+  return reconcileProgramFollowups(db,[studentId],programId);
+}
+async function reconcileProgramFollowups(db,studentIds,programId) {
+  const program=await first(db,'SELECT details FROM programs WHERE id=?',programId);
+  if(!program||JSON.parse(program.details).attendance_rule!=='consecutive_absences')return;
+  // Read the program history once, rather than issuing queries for every student.
+  // This keeps a full roster submission inside D1's per-invocation query budget.
+  const [records,tasks]=await Promise.all([
+    all(db,`SELECT a.student_id,a.status,s.date FROM attendance a JOIN sessions s ON s.id=a.session_id JOIN groups g ON g.id=s.group_id WHERE g.program_id=? AND s.status='submitted' ORDER BY s.date DESC,s.id DESC`,programId),
+    all(db,'SELECT student_id,status,created_at FROM followups WHERE program_id=?',programId)
+  ]);
+  const concerns=[];
+  for(const studentId of studentIds){
+    const history=records.filter(r=>r.student_id===studentId);let count=0;
+    for(const r of history){if(r.status!=='absent')break;count++;}
+    if(count<2)continue;
+    const latest=history[0].date;
+    if(tasks.some(t=>t.student_id===studentId&&(t.status!=='resolved'||t.created_at.slice(0,10)>=latest)))continue;
+    concerns.push({studentId,count,latest});
+  }
+  if(!concerns.length)return;
   const manager=await first(db,"SELECT id FROM staff WHERE role='manager' ORDER BY id LIMIT 1");
-  await run(db,`INSERT OR IGNORE INTO followups (id,student_id,program_id,reason,owner_id,due_date,status,next_action,created_at) VALUES (?,?,?,?,?,?,'open',?,?)`,uid(),studentId,programId,`${count} consecutive unexplained absences, most recently ${latest}.`,manager.id,nextWorkingDay(latest),'Contact guardian to understand what support is needed.',latest+'T22:00:00.000Z');
+  await db.batch(concerns.map(({studentId,count,latest})=>db.prepare(`INSERT OR IGNORE INTO followups (id,student_id,program_id,reason,owner_id,due_date,status,next_action,created_at) VALUES (?,?,?,?,?,?,'open',?,?)`).bind(uid(),studentId,programId,`${count} consecutive unexplained absences, most recently ${latest}.`,manager.id,nextWorkingDay(latest),'Contact guardian to understand what support is needed.',latest+'T22:00:00.000Z')));
 }
 export async function report(db) {
   const config=await settings(db),start=config.quarter_start,end=config.quarter_end;
@@ -66,11 +81,13 @@ export async function report(db) {
   const families=await all(db,'SELECT DISTINCT h.* FROM households h JOIN guardians g ON g.household_id=h.id JOIN student_guardians sg ON sg.guardian_id=g.id JOIN enrollments e ON e.student_id=sg.student_id WHERE e.start_date<=? AND (e.end_date IS NULL OR e.end_date>=?)',end,start);
   const byId=Object.fromEntries(students.map(s=>[s.id,s]));
   const committed=attendance.filter(a=>a.session_status==='submitted'),attended=committed.filter(a=>['present','late'].includes(a.status)),absent=committed.filter(a=>a.status==='absent'),excused=committed.filter(a=>a.status==='excused');
+  const regularPrograms=new Set(programs.filter(p=>JSON.parse(p.details).attendance_rule==='consecutive_absences').map(p=>p.id));
+  const rateAttended=attended.filter(a=>regularPrograms.has(a.program_id)).length,rateAbsent=absent.filter(a=>regularPrograms.has(a.program_id)).length;
   const pairs=assessments.filter(a=>a.phase==='end').map(e=>{const s=assessments.find(a=>a.student_id===e.student_id&&a.program_id===e.program_id&&a.phase==='start');return s?{student_id:e.student_id,program_id:e.program_id,start:s.score,end:e.score,gain:e.score-s.score}:null;}).filter(Boolean);
   const uniqueIds=[...new Set(enrollments.map(e=>e.student_id))];
   return {
     start,end,generated_at:now(),demo_today:config.demo_today,families,
-    totals:{students:uniqueIds.length,program_enrollments:new Set(enrollments.map(e=>`${e.student_id}:${e.program_id}`)).size,enrollment_rows:enrollments.length,sessions:sessions.length,submitted_sessions:sessions.filter(s=>s.status==='submitted').length,cancelled_sessions:sessions.filter(s=>s.status==='cancelled').length,incomplete_sessions:sessions.filter(s=>s.status==='draft').length,expected_attendance:committed.length,attended:attended.length,absent:absent.length,excused:excused.length,attendance_rate:attended.length+absent.length?Math.round(attended.length/(attended.length+absent.length)*1000)/10:null,unmarked:attendance.filter(a=>a.session_status==='draft'&&a.status===null).length,approved_hours:hours.filter(h=>h.status==='approved').reduce((a,h)=>a+h.hours,0),pending_hours:hours.filter(h=>h.status==='pending').reduce((a,h)=>a+h.hours,0),mentor_matches:matches.length,open_followups:tasks.filter(t=>t.status!=='resolved').length,resolved_followups:tasks.filter(t=>t.status==='resolved').length,assessment_pairs:pairs.length,assessment_missing_end:assessments.filter(a=>a.phase==='start').length-pairs.length,average_gain:pairs.length?pairs.reduce((n,p)=>n+p.gain,0)/pairs.length:0},
+    totals:{students:uniqueIds.length,program_enrollments:new Set(enrollments.map(e=>`${e.student_id}:${e.program_id}`)).size,enrollment_rows:enrollments.length,sessions:sessions.length,submitted_sessions:sessions.filter(s=>s.status==='submitted').length,cancelled_sessions:sessions.filter(s=>s.status==='cancelled').length,incomplete_sessions:sessions.filter(s=>s.status==='draft').length,expected_attendance:committed.length,attended:attended.length,absent:rateAbsent,excused:excused.length,rate_attended:rateAttended,rate_absent:rateAbsent,attendance_rate:rateAttended+rateAbsent?Math.round(rateAttended/(rateAttended+rateAbsent)*1000)/10:null,unmarked:attendance.filter(a=>a.session_status==='draft'&&a.status===null).length,approved_hours:hours.filter(h=>h.status==='approved').reduce((a,h)=>a+h.hours,0),pending_hours:hours.filter(h=>h.status==='pending').reduce((a,h)=>a+h.hours,0),mentor_matches:matches.length,open_followups:tasks.filter(t=>t.status!=='resolved').length,resolved_followups:tasks.filter(t=>t.status==='resolved').length,assessment_pairs:pairs.length,assessment_missing_end:assessments.filter(a=>a.phase==='start').length-pairs.length,average_gain:pairs.length?pairs.reduce((n,p)=>n+p.gain,0)/pairs.length:0},
     programs:programs.map(p=>({...p,students:new Set(enrollments.filter(e=>e.program_id===p.id).map(e=>e.student_id)).size,attended:attended.filter(a=>a.program_id===p.id).length,absent:absent.filter(a=>a.program_id===p.id).length})),
     evidence:{students:uniqueIds.map(id=>({...byId[id],programs:programs.filter(p=>enrollments.some(e=>e.student_id===id&&e.program_id===p.id)).map(p=>p.name).join(', ')})),attendance:committed.map(a=>({...a,name:fullName(byId[a.student_id])})),hours,pairs:pairs.map(p=>({...p,name:fullName(byId[p.student_id])})),incomplete:sessions.filter(s=>s.status==='draft').map(s=>({...s,unmarked:attendance.filter(a=>a.session_id===s.id&&a.status===null).length}))},groups
   };
@@ -105,10 +122,11 @@ async function api(request,env,url){
     const age=Number(data.age);if(!Number.isInteger(age)||age<0||age>18)fail(400,'Enter an age from 0 to 18.');
     const language=optional(data.language,40)||'English';if(!['English','Spanish','Haitian Creole'].includes(language))fail(400,'Choose English, Spanish, or Haitian Creole.');
     const neighborhood=data.neighborhood;if(!['Little Havana','West Little River'].includes(neighborhood))fail(400,'Choose Little Havana or West Little River.');
-    if(!Array.isArray(data.group_ids)||!data.group_ids.length||data.group_ids.length>2)fail(400,'Choose one or two programs.');
-    const selected=await all(db,'SELECT g.*,p.min_age,p.max_age FROM groups g JOIN programs p ON p.id=g.program_id');const gs=data.group_ids.map(id=>selected.find(g=>g.id===id));
+    if(!Array.isArray(data.group_ids)||!data.group_ids.length||data.group_ids.length>4)fail(400,'Choose between one and four programs.');
+    const selected=await all(db,'SELECT g.*,p.min_age,p.max_age,p.details FROM groups g JOIN programs p ON p.id=g.program_id');const gs=data.group_ids.map(id=>selected.find(g=>g.id===id));
     if(gs.some(g=>!g)||new Set(gs.map(g=>g.program_id)).size!==gs.length)fail(400,'Choose at most one group per program.');
-    if(gs.some(g=>age<g.min_age||age>g.max_age))fail(400,'The selected demo cohorts serve students ages 11–14.');
+    if(gs.some(g=>JSON.parse(g.details).enrollment_mode==='secure_system'))fail(400,'Private counseling intake stays in the secure counseling system.');
+    const ineligible=gs.find(g=>age<g.min_age||age>g.max_age);if(ineligible)fail(400,`${ineligible.name} serves ages ${ineligible.min_age}–${ineligible.max_age}. Choose an age-appropriate group.`);
     const config=await settings(db),gid=uid(),sid=uid(),existingGuardian=optional(data.guardian_id,100);
     if(existingGuardian){if(!user)fail(403,'Only staff may link an existing guardian.');requireManager(user);if(!await first(db,'SELECT id FROM guardians WHERE id=?',existingGuardian))fail(400,'Guardian not found.');}
     for(const g of gs){const row=await first(db,'SELECT COUNT(*) n FROM enrollments WHERE group_id=? AND start_date<=? AND (end_date IS NULL OR end_date>=?)',g.id,config.demo_today,config.demo_today);if(row.n>=g.capacity)fail(409,`${g.name} is full. Choose another group or ask Marisol to review enrollment.`);}
@@ -156,7 +174,7 @@ async function api(request,env,url){
       for(const e of data.entries)writes.push(db.prepare('UPDATE attendance SET status=?,updated_by=?,updated_at=? WHERE session_id=? AND student_id=? AND EXISTS(SELECT 1 FROM sessions WHERE id=? AND edit_token=?)').bind(e.status,user.id,stamp,session.id,e.student_id,session.id,edit));
       writes.push(db.prepare('INSERT INTO audit_log SELECT ?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM sessions WHERE id=? AND edit_token=?)').bind(uid(),user.id,'attendance_saved',session.id,JSON.stringify({before:roster.map(r=>({student_id:r.student_id,status:r.status})),after:data.entries,status}),stamp,session.id,edit));
       const result=await db.batch(writes);if(!result[0].meta.changes)fail(409,'Someone updated this roster. Reload it before saving.');
-      if(status==='submitted')for(const r of updated)await reconcileFollowups(db,r.student_id,session.program_id);
+      if(status==='submitted')await reconcileProgramFollowups(db,updated.map(r=>r.student_id),session.program_id);
       return json({ok:true,status});
     }
   }
@@ -164,7 +182,7 @@ async function api(request,env,url){
   if(path==='/api/report'&&method==='GET')return json(await report(db));
   if(path==='/api/report/draft'&&method==='POST'){
     const rep=await report(db),t=rep.totals;
-    const fallback=`TidePath · Q3 2026 · Fictional demonstration\n\nParticipation\n${t.students} unique students held ${t.program_enrollments} program enrollments. Staff submitted ${t.submitted_sessions} session rosters. There were ${t.attended} attended student-sessions and ${t.absent} unexplained absences. The attendance rate was ${t.attendance_rate??'not available'}% of recorded, non-excused opportunities.\n\nVolunteer contribution\n${t.approved_hours} approved volunteer hours are included; ${t.pending_hours} hours await approval.\n\nFollow-through\n${t.open_followups} follow-ups remain open and ${t.resolved_followups} are resolved. Simulated contact attempts are demonstration events, not actual messages.\n\nAssessments and limitations\n${t.assessment_pairs} paired self-assessments show an average change of ${t.average_gain.toFixed(2)} on a five-point scale. This fictional, descriptive measure does not establish program effectiveness. ${t.assessment_missing_end} end assessments are missing.\n\nData quality\n${t.incomplete_sessions} rosters remain incomplete, with ${t.unmarked} unmarked entries. Draft rosters and cancelled sessions are excluded from attendance totals. This report is provisional until the quarter closes and outstanding entries are reviewed.`;
+    const fallback=`TidePath · Q3 2026 · Fictional demonstration\n\nParticipation\n${t.students} unique students held ${t.program_enrollments} program enrollments. Staff submitted ${t.submitted_sessions} session rosters. There were ${t.attended} attended student-sessions and ${t.absent} unexplained absences. The regular-session attendance rate was ${t.attendance_rate??'not available'}% (${t.rate_attended} attended / ${t.rate_attended+t.rate_absent} recorded, non-excused opportunities). Optional community events are excluded from this rate.\n\nVolunteer contribution\n${t.approved_hours} approved volunteer hours are included; ${t.pending_hours} hours await approval.\n\nFollow-through\n${t.open_followups} follow-ups remain open and ${t.resolved_followups} are resolved. Simulated contact attempts are demonstration events, not actual messages.\n\nAssessments and limitations\n${t.assessment_pairs} paired self-assessments show an average change of ${t.average_gain.toFixed(2)} on a five-point scale. This fictional, descriptive measure does not establish program effectiveness. ${t.assessment_missing_end} end assessments are missing.\n\nData quality\n${t.incomplete_sessions} rosters remain incomplete, with ${t.unmarked} unmarked entries. Draft rosters and cancelled sessions are excluded from attendance totals. This report is provisional until the quarter closes and outstanding entries are reviewed.`;
     // Numeric report sections are assembled by code. AI contributes only qualitative
     // notes, preventing the model from restating a correct rate with a wrong divisor.
     let draft=await generateDraft(env,`Write two short paragraphs of qualitative staff-review notes for a fictional youth nonprofit's provisional quarterly report. Return plain text without headings, markdown, dates, counts, percentages or any other numbers. Do not restate statistics or describe attendance calculations. Only recommend reviewing outstanding records and following through on assigned family contacts. Context flags: ${JSON.stringify({unfinished_rosters:t.incomplete_sessions>0,pending_volunteer_approvals:t.pending_hours>0,missing_end_assessments:t.assessment_missing_end>0,unresolved_family_followups:t.open_followups>0,quarter_is_provisional:true})}. Do not invent program outcomes, clinical findings, measured savings, or completed actions. Explain that descriptive self-assessments do not establish causality.`,fallback);
