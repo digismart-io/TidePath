@@ -3,6 +3,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 import { programCatalog } from '../seed/programs.mjs';
+import { familyProfiles, studentFamilyIndex, authoredChildName } from '../seed/families.mjs';
 
 export const DEMO_PASSWORD = 'TidePath-demo-2026!';
 export function generateSeed() {
@@ -19,18 +20,15 @@ export function generateSeed() {
     const salt = `tidepath-fictional-${sid}`;
     add('staff',{id:sid,name,email,role,password_hash:pbkdf2Sync(DEMO_PASSWORD,salt,100000,32,'sha256').toString('hex'),password_salt:salt});
   }
-  const surnames = ['Rivera','Chen','Ortega','Johnson','Patel','Williams','Santos','Nguyen','Thompson','Martinez','Reed','Hassan','Garcia','Brown','Lewis','Kim','Robinson','Lopez','Walker','Allen','Young','King','Wright','Scott','Green','Baker','Adams','Nelson','Hill','Campbell','Mitchell','Carter'];
-  const adults=['Rosa','Mei','Lucia','Dana','Anita','Simone','Paula','Linh','Morgan','Isabel','Jordan','Amira','Elena','Taylor','Avery','Jisoo','Cameron','Valeria','Casey','Robin','Drew','Alex','Riley','Jamie','Sage','Leslie','Quinn','Parker','Reese','Sam','Blair','Skyler'];
-  surnames.push('Pierre','Jean','Desrosiers','Joseph','Baptiste','Louis','Charles','Etienne','Francois','Dorsainvil','Alvarez','Hernandez','Rodriguez','Gonzalez','Diaz','Perez','Castillo','Vazquez','Torres','Cruz','Moreau','Laurent','Paul','Michel','Augustin','Celestin','Noel','Toussaint','Fleurant','Saintil','Ruiz','Mendez','Delgado','Romero','Suarez','Medina','Pena','Valdes');
+  const surnames=familyProfiles.map(f=>f.lastName);
   for(let i=0;i<70;i++) {
     add('households',{id:id('household',i+1),name:`${surnames[i]} family`,neighborhood:i%2===0?'Little Havana':'West Little River'});
-    add('guardians',{id:id('guardian',i+1),household_id:id('household',i+1),name:`${adults[i%adults.length]} ${surnames[i]}`,email:`family${i+1}@example.com`,phone:`305-555-${String(100+i).padStart(4,'0')}`,preferred_language:['Spanish','English','Haitian Creole'][i%3]});
+    add('guardians',{id:id('guardian',i+1),household_id:id('household',i+1),name:`${familyProfiles[i].guardianFirst} ${surnames[i]}`,email:`family${i+1}@example.com`,phone:`305-555-${String(100+i).padStart(4,'0')}`,preferred_language:familyProfiles[i].language});
   }
   const firsts=['Sofia','Ethan','Camila','Noah','Aisha','Oliver','Isabella','Liam','Mateo','Chloe','Diego','Zoe','Rohan','Maya','Lucas','Aria','Amelia','Benjamin','Layla','Elijah','Grace','Daniel','Nora','Sebastian','Leila','Henry','Mila','Samuel','Zara','Leo','Alice','Owen','Naomi','Gabriel','Eva','Isaac','Ivy','Julian','Ruby','Adam'];
-  firsts.push('Adriana','Andre','Beatrice','Carlos','Celine','Dante','Elise','Fabian','Gabriela','Hugo','Imani','Javier','Kiara','Lucien','Mariana','Nicolas','Odette','Pablo','Reina','Stefan','Tatiana','Ulysses','Vivian','Wesley','Ximena','Yara','Zachary','Alina','Bastien','Clara','Dalia','Emilio','Flora','Giselle','Hector','Ines','Jade','Kevin','Lena','Malik','Nadine','Oscar','Paloma','Raphael','Solange','Thiago','Uma','Victor','Willa','Yves','Zelia','Amir','Bianca','Cesar','Daphne','Enzo','Farah','Gael','Helena','Ibrahim');
   for(let i=0;i<100;i++) {
-    const gi=i<8?i:i<40?i-8:32+Math.floor((i-40)*38/60);
-    add('students',{id:id('student',i+1),first_name:firsts[i],last_name:surnames[gi],age:i<40?11+i%4:i<70?11+i%8:6+i%13,created_at:'2026-06-22T12:00:00.000Z'});
+    const gi=studentFamilyIndex(i);
+    add('students',{id:id('student',i+1),first_name:i<40?firsts[i]:authoredChildName(i),last_name:surnames[gi],age:i<40?11+i%4:i<70?11+i%8:6+i%13,created_at:'2026-06-22T12:00:00.000Z'});
     add('student_guardians',{student_id:id('student',i+1),guardian_id:id('guardian',gi+1)});
   }
   for(const p of programCatalog)add('programs',{...p,details:JSON.stringify(p.details)});

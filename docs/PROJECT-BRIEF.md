@@ -40,3 +40,7 @@ Households are separate from guardians. Contact language is explicit. The staff 
 ## Demonstration clock
 
 The active quarter is July–September 2026. The application uses September 24, 2026 as its scenario date so missed-session tasks and incomplete rosters are repeatable. Report generation and audit timestamps use the actual server time. Reports are provisional and reflect current records; immutable issued-report versioning is future work.
+
+## Fictional family profiles
+
+`seed/families.mjs` explicitly authors each demo guardian’s name and preferred contact language, plus the added children’s given names. This replaces the former round-robin language assignment. Haitian Creole-speaking fictional households have deliberately coordinated names, and Spanish/English-speaking fictional households have their own explicit profiles. This is fixture authoring, not a rule that derives a real person’s language from their name. Registration always retains the language the family selects.
