@@ -1,4 +1,4 @@
-const CACHE='tidepath-shell-v4';
+const CACHE='tidepath-shell-v5';
 const SHELL=['/','/index.html','/style.css','/brand.css','/tokens.css','/app.js','/icon.svg','/manifest.webmanifest'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL))));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key))))));

@@ -184,13 +184,13 @@ async function api(request,env,url){
       const valid=new Set([null,'present','late','absent','excused']);
       for(const e of data.entries)if(!roster.some(r=>r.student_id===e.student_id)||!valid.has(e.status))fail(400,'An attendance entry does not belong to this roster.');
       const updated=roster.map(r=>({...r,status:data.entries.find(e=>e.student_id===r.student_id)?.status??(data.entries.some(e=>e.student_id===r.student_id)?null:r.status)}));
-      if((data.finalize||session.status==='submitted')&&updated.some(r=>r.status===null))fail(400,'Mark every student before submitting the roster. Save a draft if attendance is incomplete.');
-      const stamp=now(),edit=uid(),status=data.finalize||session.status==='submitted'?'submitted':'draft';
-      const writes=[db.prepare('UPDATE sessions SET version=version+1,edit_token=?,status=?,submitted_by=?,submitted_at=? WHERE id=? AND version=?').bind(edit,status,status==='submitted'?user.id:null,status==='submitted'?stamp:null,session.id,data.version)];
+      if(updated.some(r=>r.status===null))fail(400,'Choose a status for every student, then click Submit attendance. Nothing has been saved yet.');
+      const stamp=now(),edit=uid(),status='submitted';
+      const writes=[db.prepare('UPDATE sessions SET version=version+1,edit_token=?,status=?,submitted_by=?,submitted_at=? WHERE id=? AND version=?').bind(edit,status,user.id,stamp,session.id,data.version)];
       for(const e of data.entries)writes.push(db.prepare('UPDATE attendance SET status=?,updated_by=?,updated_at=? WHERE session_id=? AND student_id=? AND EXISTS(SELECT 1 FROM sessions WHERE id=? AND edit_token=?)').bind(e.status,user.id,stamp,session.id,e.student_id,session.id,edit));
       writes.push(db.prepare('INSERT INTO audit_log SELECT ?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM sessions WHERE id=? AND edit_token=?)').bind(uid(),user.id,'attendance_saved',session.id,JSON.stringify({before:roster.map(r=>({student_id:r.student_id,status:r.status})),after:data.entries,status}),stamp,session.id,edit));
       const result=await db.batch(writes);if(!result[0].meta.changes)fail(409,'Someone updated this roster. Reload it before saving.');
-      if(status==='submitted')await reconcileProgramFollowups(db,updated.map(r=>r.student_id),session.program_id);
+      await reconcileProgramFollowups(db,updated.map(r=>r.student_id),session.program_id);
       return json({ok:true,status});
     }
   }

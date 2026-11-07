@@ -46,7 +46,7 @@ Family registration collects guardian details once and saves up to ten children 
 - One hundred students, 70 households, 130 distinct child–program enrollments, fifteen volunteer records and 66 sessions in one fictional quarter.
 - Separate households and guardians, preferred contact language and stable student IDs.
 - English, Spanish and Haitian Creole family registration labels and contact templates. The main staff interface is English; full localization is not claimed.
-- Phone-friendly attendance, saved drafts, complete-roster submission, correction audit history and optimistic concurrency checks.
+- Phone-friendly attendance with one Submit attendance action. Complete submissions immediately update follow-ups and reporting; no review or approval step. Corrections keep an audit history and concurrent changes are checked.
 - Two consecutive unexplained absences trigger one assigned follow-up. Message attempts, replies, ownership, next steps and resolution are separate events. Return to attendance does not silently resolve a concern.
 - Mentor matches retain history when reassigned; volunteer hours require approval and cannot duplicate a volunteer/session pair.
 - Quarterly totals with source-record drill-down, downloadable JSON evidence, a printable view and reviewed narrative drafting.
