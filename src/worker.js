@@ -117,28 +117,44 @@ async function api(request,env,url){
   if(path==='/api/me'&&method==='GET')return json({user,demo:env.DEMO_MODE==='true',ai_available:Boolean(env.AI&&env.AI_MODEL)});
   if(path==='/api/register'&&method==='POST'){
     const data=await body(request);await throttle(db,await digest(`register:${request.headers.get('CF-Connecting-IP')||'local'}`),30);
-    const first_name=text(data.first_name,'Child first name',80),last_name=text(data.last_name,'Child last name',80),name=text(data.guardian_name,'Guardian name',120),email=text(data.email,'Guardian email').toLowerCase();
+    const name=text(data.guardian_name,'Guardian name',120),email=text(data.email,'Guardian email').toLowerCase();
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))fail(400,'Enter a valid guardian email address.');
-    const age=Number(data.age);if(!Number.isInteger(age)||age<0||age>18)fail(400,'Enter an age from 0 to 18.');
     const language=optional(data.language,40)||'English';if(!['English','Spanish','Haitian Creole'].includes(language))fail(400,'Choose English, Spanish, or Haitian Creole.');
     const neighborhood=data.neighborhood;if(!['Little Havana','West Little River'].includes(neighborhood))fail(400,'Choose Little Havana or West Little River.');
-    if(!Array.isArray(data.group_ids)||!data.group_ids.length||data.group_ids.length>4)fail(400,'Choose between one and four programs.');
-    const selected=await all(db,'SELECT g.*,p.min_age,p.max_age,p.details FROM groups g JOIN programs p ON p.id=g.program_id');const gs=data.group_ids.map(id=>selected.find(g=>g.id===id));
-    if(gs.some(g=>!g)||new Set(gs.map(g=>g.program_id)).size!==gs.length)fail(400,'Choose at most one group per program.');
-    if(gs.some(g=>JSON.parse(g.details).enrollment_mode==='secure_system'))fail(400,'Private counseling intake stays in the secure counseling system.');
-    const ineligible=gs.find(g=>age<g.min_age||age>g.max_age);if(ineligible)fail(400,`${ineligible.name} serves ages ${ineligible.min_age}–${ineligible.max_age}. Choose an age-appropriate group.`);
-    const config=await settings(db),gid=uid(),sid=uid(),existingGuardian=optional(data.guardian_id,100);
+    // Legacy single-child submissions and the family form use the same validation and atomic save.
+    const inputs=data.children===undefined?[data]:data.children;
+    if(!Array.isArray(inputs)||!inputs.length||inputs.length>10)fail(400,'Include between one and ten children.');
+    const selected=await all(db,'SELECT g.*,p.min_age,p.max_age,p.details FROM groups g JOIN programs p ON p.id=g.program_id');
+    const children=inputs.map((child,index)=>{
+      if(!child||typeof child!=='object'||Array.isArray(child))fail(400,`Child ${index+1}: enter child details.`);
+      const first_name=text(child.first_name,`Child ${index+1} first name`,80),last_name=text(child.last_name,`Child ${index+1} last name`,80);
+      const age=Number(child.age);if(child.age===null||child.age===undefined||String(child.age).trim()===''||!Number.isInteger(age)||age<0||age>18)fail(400,`Child ${index+1}: enter an age from 0 to 18.`);
+      if(!Array.isArray(child.group_ids)||!child.group_ids.length||child.group_ids.length>4)fail(400,`Child ${index+1}: choose between one and four programs.`);
+      const gs=child.group_ids.map(id=>selected.find(g=>g.id===id));
+      if(gs.some(g=>!g)||new Set(gs.map(g=>g.program_id)).size!==gs.length)fail(400,`Child ${index+1}: choose at most one group per program.`);
+      if(gs.some(g=>JSON.parse(g.details).enrollment_mode==='secure_system'))fail(400,'Private counseling intake stays in the secure counseling system.');
+      const ineligible=gs.find(g=>age<g.min_age||age>g.max_age);if(ineligible)fail(400,`Child ${index+1}: ${ineligible.name} serves ages ${ineligible.min_age}–${ineligible.max_age}. Choose an age-appropriate group.`);
+      return {sid:uid(),first_name,last_name,age,gs};
+    });
+    const keys=children.map(c=>JSON.stringify([c.first_name.toLowerCase(),c.last_name.toLowerCase(),c.age]));
+    if(new Set(keys).size!==keys.length)fail(400,'The same child appears more than once. Remove the repeated child before submitting.');
+    const config=await settings(db),gid=uid(),existingGuardian=optional(data.guardian_id,100);
     if(existingGuardian){if(!user)fail(403,'Only staff may link an existing guardian.');requireManager(user);if(!await first(db,'SELECT id FROM guardians WHERE id=?',existingGuardian))fail(400,'Guardian not found.');}
-    for(const g of gs){const row=await first(db,'SELECT COUNT(*) n FROM enrollments WHERE group_id=? AND start_date<=? AND (end_date IS NULL OR end_date>=?)',g.id,config.demo_today,config.demo_today);if(row.n>=g.capacity)fail(409,`${g.name} is full. Choose another group or ask Marisol to review enrollment.`);}
+    // Check the combined sibling demand, not just each child's demand separately.
+    const demand=new Map();for(const child of children)for(const g of child.gs)demand.set(g.id,(demand.get(g.id)||0)+1);
+    for(const [id,count] of demand){const g=selected.find(g=>g.id===id),row=await first(db,'SELECT COUNT(*) n FROM enrollments WHERE group_id=? AND start_date<=? AND (end_date IS NULL OR end_date>=?)',id,config.demo_today,config.demo_today);if(row.n+count>g.capacity)fail(409,`${g.name} does not have space for all selected children. Choose another group or ask Marisol to review enrollment. No children have been registered.`);}
     const writes=[];
-    if(!existingGuardian){const hid=uid();writes.push(db.prepare('INSERT INTO households VALUES (?,?,?)').bind(hid,`${last_name} family`,neighborhood),db.prepare('INSERT INTO guardians (id,household_id,name,email,phone,preferred_language) VALUES (?,?,?,?,?,?)').bind(gid,hid,name,email,optional(data.phone,40),language));}
-    writes.push(db.prepare('INSERT INTO students VALUES (?,?,?,?,?)').bind(sid,first_name,last_name,age,now()),db.prepare('INSERT INTO student_guardians VALUES (?,?)').bind(sid,existingGuardian||gid));
-    for(const g of gs)writes.push(db.prepare('INSERT INTO enrollments VALUES (?,?,?,?,NULL)').bind(uid(),sid,g.id,config.demo_today));
-    // Existing rosters are historical snapshots; add only future draft sessions.
-    for(const g of gs)writes.push(db.prepare("INSERT INTO attendance(session_id,student_id) SELECT id,? FROM sessions WHERE group_id=? AND date>=? AND status='draft'").bind(sid,g.id,config.demo_today));
+    if(!existingGuardian){const hid=uid();writes.push(db.prepare('INSERT INTO households VALUES (?,?,?)').bind(hid,`${children[0].last_name} family`,neighborhood),db.prepare('INSERT INTO guardians (id,household_id,name,email,phone,preferred_language) VALUES (?,?,?,?,?,?)').bind(gid,hid,name,email,optional(data.phone,40),language));}
+    for(const child of children){
+      const {sid,first_name,last_name,age,gs}=child;
+      writes.push(db.prepare('INSERT INTO students VALUES (?,?,?,?,?)').bind(sid,first_name,last_name,age,now()),db.prepare('INSERT INTO student_guardians VALUES (?,?)').bind(sid,existingGuardian||gid));
+      for(const g of gs)writes.push(db.prepare('INSERT INTO enrollments VALUES (?,?,?,?,NULL)').bind(uid(),sid,g.id,config.demo_today));
+      // Existing rosters are historical snapshots; add only future draft sessions.
+      for(const g of gs)writes.push(db.prepare("INSERT INTO attendance(session_id,student_id) SELECT id,? FROM sessions WHERE group_id=? AND date>=? AND status='draft'").bind(sid,g.id,config.demo_today));
+      if(user)writes.push(db.prepare('INSERT INTO audit_log (id,staff_id,action,entity_id,detail,created_at) VALUES (?,?,?,?,?,?)').bind(uid(),user.id,'registration',sid,JSON.stringify({group_ids:gs.map(g=>g.id),linked_guardian:Boolean(existingGuardian)}),now()));
+    }
     await db.batch(writes);
-    if(user)await audit(db,user,'registration',sid,{group_ids:data.group_ids,linked_guardian:Boolean(existingGuardian)});
-    return json({ok:true,message:'Registration received. Staff will review household details. No existing family information is disclosed.'},201);
+    return json({ok:true,children_registered:children.length,message:'Family registration received. Staff will review household details. No existing family information is disclosed.'},201);
   }
   if(!user)fail(401,'Please sign in to access this information.');
   if(path==='/api/logout'&&method==='POST'){const token=request.headers.get('cookie')?.match(/(?:^|;\s*)tp_session=([^;]+)/)?.[1];if(token)await run(db,'DELETE FROM auth_sessions WHERE token_hash=?',await digest(token));return json({ok:true},200,{'Set-Cookie':'tp_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0'});}

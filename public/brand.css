@@ -273,3 +273,13 @@ dialog{border:0;border-radius:var(--radius-md)}
   .report-metric:nth-child(4) small,.report-metric:nth-child(4) .muted{color:var(--color-muted)}
   .program-photo,.detail-photo{display:none}
 }
+
+/* Family registration keeps the shared guardian above independently editable children. */
+.registration-section-title{margin:28px 0 12px}
+.registration-child{min-width:0;border:1px solid var(--color-rule-dark);border-radius:12px;padding:20px;margin:18px 0 24px}
+.registration-child>legend{padding:0 8px;font:700 1.35rem var(--font-display)}
+.registration-child .program-choices{border:0;padding:0;margin:8px 0}
+.registration-child .program-choices>legend{margin-bottom:8px}
+.registration-child .btn{margin-top:12px}
+.counseling-note{margin-top:24px;max-width:65ch}
+@media(max-width:480px){.registration-child{padding:14px 12px}}

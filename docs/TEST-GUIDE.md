@@ -55,3 +55,11 @@ Hosted fictional demo: `npm run demo:reset:remote -- --confirm=tidepath-demo`. I
 “This prototype connects a fictional quarter of program activity from registration to attendance, owned follow-ups, volunteer contributions and traceable reports. It demonstrates a pathway to reduce reconciliation and missed contact; time savings have not been measured. Spreadsheet import and reconciliation are planned next. Counseling, fundraising and financial systems remain separate.”
 
 Do not claim live spreadsheet synchronization, real outbound messaging, clinical outcomes, autonomous multi-agent execution, complete localization, full offline operation, or production readiness.
+
+## Family registration
+
+From the public Programs page, choose a starting program and language, then continue to family registration. Enter guardian details once. Add each child using **Add another child**; each child has independent age and program-group choices. The form shows the current number of children, supports removal, and preserves entered details when adding/removing children or switching the form language. Up to ten children can be submitted together.
+
+Rehearse with two invented siblings: age 12 in Next Wave, age 7 in Neighborhood Together. A successful submission creates one household, one guardian, two students and their separate enrollments. An invalid age, repeated child or insufficient combined capacity saves none of the family; correct the form and resubmit. The save uses one database transaction, including staff audit entries. Earlier submitted rosters remain unchanged. Existing households can be linked only by a signed-in manager after confirming identity; public email matches do not expose or automatically link existing families.
+
+Automated checks cover sibling linkage, independent enrollments, age validation, combined capacity, database rollback and manager-only existing-household linking. Valid browser submissions during rehearsal increase the demo totals; use local data for rehearsal if the live 100-student baseline should be preserved.

@@ -38,6 +38,8 @@ Choose a demo role on the sign-in screen, then select **Sign in**. All four fict
 
 Roles are enforced in the Worker API, not just in the navigation. The four logins represent test roles, not TidePath's complete nine-person staffing structure. Passwords are PBKDF2 hashed; sessions are opaque, server-stored, expiring HttpOnly cookies. Public registration never returns existing family identities. Shared accounts and published demo credentials must be replaced before any real-data pilot.
 
+Family registration collects guardian details once and saves up to ten children together, with individual ages and program groups. Adding/removing children and changing form language preserve entered details. Validation and saving apply to the whole family.
+
 ## Included
 
 - Five complete service profiles: mentoring, family counseling, safety workshops, mental health workshops and community events. Counseling is catalog-only; its client records remain in the secure system.

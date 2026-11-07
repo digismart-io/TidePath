@@ -32,3 +32,41 @@ test('optional community events do not create absence tasks or enter the regular
 test('registration accepts an age-appropriate community event and rejects a mismatched mentoring age',async t=>{const {env}=setup(t);const data={first_name:'Young',last_name:'Demo',age:7,guardian_name:'Demo Guardian',email:'young@example.com',language:'Haitian Creole',neighborhood:'Little Havana',group_ids:['together-havana']};assert.equal((await call(env,'/register',{method:'POST',data})).status,201);const invalid=await call(env,'/register',{method:'POST',data:{...data,group_ids:['harbor-bayview']}});assert.equal(invalid.status,400);assert.match(invalid.data.error,/11–14/);});
 test('authored fictional family names and language preferences remain coherent',t=>{const {sqlite}=setup(t);for(const [name,language] of [['Lucia Ortega','Spanish'],['Rosa Rivera','Spanish'],['Claudine Francois','Haitian Creole'],['Mireille Pierre','Haitian Creole'],['Josue Laurent','Haitian Creole'],['Mei Chen','English']])assert.equal(sqlite.prepare('SELECT preferred_language FROM guardians WHERE name=?').get(name)?.preferred_language,language);const children=sqlite.prepare("SELECT first_name,last_name FROM students WHERE last_name='Francois' ORDER BY first_name").all();assert.ok(children.length>0);assert.ok(children.every(c=>['Elise','Patrick'].includes(c.first_name)));});
 test('actual registration preserves the stated language rather than inferring it from a name',async t=>{const {env,sqlite}=setup(t);const data={first_name:'Demo',last_name:'Ortega',age:12,guardian_name:'Lucia Ortega',email:'stated-preference@example.com',language:'Haitian Creole',neighborhood:'Little Havana',group_ids:['wave-bayview']};assert.equal((await call(env,'/register',{method:'POST',data})).status,201);assert.equal(sqlite.prepare('SELECT preferred_language FROM guardians WHERE email=?').get(data.email).preferred_language,'Haitian Creole');});
+
+const familyRegistration={guardian_name:'Demo Sibling Guardian',email:'siblings@example.com',language:'Spanish',neighborhood:'Little Havana',children:[{first_name:'Luz',last_name:'Demo',age:12,group_ids:['wave-bayview','together-havana']},{first_name:'Sol',last_name:'Other',age:7,group_ids:['together-havana']}]};
+test('siblings share one new household and guardian with independent enrollments and future rosters',async t=>{
+ const {env,sqlite}=setup(t);const result=await call(env,'/register',{method:'POST',data:familyRegistration});
+ assert.equal(result.status,201,JSON.stringify(result.data));assert.equal(result.data.children_registered,2);assert.deepEqual(Object.keys(result.data).sort(),['children_registered','message','ok']);
+ assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM students').get().n,102);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM households').get().n,71);
+ const children=sqlite.prepare('SELECT s.*,g.id guardian_id FROM students s JOIN student_guardians sg ON sg.student_id=s.id JOIN guardians g ON g.id=sg.guardian_id WHERE g.email=? ORDER BY s.first_name').all(familyRegistration.email);
+ assert.equal(children.length,2);assert.equal(children[0].guardian_id,children[1].guardian_id);
+ for(const child of children){const programs=sqlite.prepare('SELECT group_id FROM enrollments WHERE student_id=? ORDER BY group_id').all(child.id).map(r=>r.group_id);assert.deepEqual(programs,child.first_name==='Luz'?['together-havana','wave-bayview']:['together-havana']);assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM attendance a JOIN sessions s ON s.id=a.session_id WHERE a.student_id=? AND (s.status!='draft' OR s.date<'2026-09-24')").get(child.id).n,0);}
+ assert.equal(sqlite.prepare('PRAGMA foreign_key_check').all().length,0);
+});
+test('invalid sibling, repeated child and invalid child counts leave the entire family unsaved',async t=>{
+ const {env,sqlite}=setup(t);
+ for(const children of [[],Array(11).fill(familyRegistration.children[0]),[familyRegistration.children[0],{...familyRegistration.children[1],age:7,group_ids:['wave-bayview']}],[familyRegistration.children[0],{...familyRegistration.children[0]}],[{...familyRegistration.children[0],age:''}]]){
+  assert.equal((await call(env,'/register',{method:'POST',data:{...familyRegistration,children}})).status,400);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM students').get().n,100);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM households').get().n,70);
+ }
+});
+test('combined sibling capacity is checked before any family records are written',async t=>{
+ const {env,sqlite}=setup(t);sqlite.prepare("UPDATE groups SET capacity=(SELECT COUNT(*) FROM enrollments WHERE group_id='wave-bayview' AND end_date IS NULL)+1 WHERE id='wave-bayview'").run();
+ const children=[{...familyRegistration.children[0],group_ids:['wave-bayview']},{...familyRegistration.children[1],age:13,group_ids:['wave-bayview']}];
+ assert.equal((await call(env,'/register',{method:'POST',data:{...familyRegistration,children}})).status,409);
+ assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM students').get().n,100);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM guardians').get().n,70);
+});
+test('a database failure while saving the second child rolls back the whole family',async t=>{
+ const {env,sqlite}=setup(t);sqlite.exec("CREATE TRIGGER test_child_failure BEFORE INSERT ON students WHEN NEW.first_name='Sol' BEGIN SELECT RAISE(ABORT,'test rollback'); END;");
+ assert.equal((await call(env,'/register',{method:'POST',data:familyRegistration})).status,500);
+ for(const table of ['students','households','guardians'])assert.equal(sqlite.prepare(`SELECT COUNT(*) n FROM ${table}`).get().n,table==='students'?100:70);
+});
+test('only a manager can link all siblings to an existing confirmed guardian, with audit entries',async t=>{
+ const {env,sqlite}=setup(t),data={...familyRegistration,guardian_id:'guardian-001'};
+ assert.equal((await call(env,'/register',{method:'POST',data})).status,403);
+ assert.equal((await call(env,'/register',{method:'POST',data,cookie:await login(env,'elena')})).status,403);
+ const result=await call(env,'/register',{method:'POST',data,cookie:await login(env)});assert.equal(result.status,201,JSON.stringify(result.data));
+ assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM households').get().n,70);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM guardians').get().n,70);
+ assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM audit_log WHERE action='registration'").get().n,2);
+ assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM student_guardians WHERE guardian_id='guardian-001'").get().n,4);
+});
