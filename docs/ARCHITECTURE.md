@@ -42,7 +42,7 @@ Managers can edit a guardian’s shared name, email, phone and preferred languag
 
 ## CSV identity review
 
-CSV preview is read-only. Email, phone, guardian-name and child-name similarities produce suggestions, not decisions. Managers explicitly choose existing identities, new records or identities confirmed on an earlier row. The server checks those choices again at import time.
+CSV preview is read-only. Clearly new rows are prepared for creation automatically; identical guardian details within the CSV share one new family and exact repeated child details share one child. Email, phone, guardian-name and child-name similarities to existing records or conflicting CSV rows require review. Managers explicitly confirm those existing identities or choose new records. The server recomputes automatic decisions against current records and checks explicit choices again at import time.
 
 A batch transaction writes new identities, enrollment, eligible future attendance entries, source mappings and audit records. It preserves existing profile fields and submitted historical attendance. The `(source_system, source_id)` key prevents importing the same source row twice. A stored fingerprint detects changed contents under a reused source ID and blocks silent overwrites. Batches are limited to 20 rows / 20 KB; bulk writes limit database calls.
 
