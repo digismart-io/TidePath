@@ -1,0 +1,21 @@
+[
+  {
+    "date": "2026-11-07",
+    "scope": "app",
+    "macrostructure": "Workbench",
+    "theme": "studied-DNA (user-provided TidePath programs)",
+    "enrichment": "supplied program photography",
+    "nav": "application side rail",
+    "footer": "Ft2",
+    "brief": "Reskin all operational screens using supplied navy/tangerine style, with user-requested muted blue-gray highlights"
+  },
+  {
+    "date": "2026-11-07",
+    "macrostructure": "Workbench",
+    "theme": "Quiet",
+    "enrichment": "none",
+    "nav": "N3 application side rail",
+    "footer": "Ft2",
+    "brief": "TidePath program coordination workspace with mobile attendance"
+  }
+]

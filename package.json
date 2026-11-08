@@ -1,0 +1,24 @@
+{
+  "name": "tidepath",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "db:reset": "node scripts/reset.mjs",
+    "demo:reset:remote": "node scripts/reset-remote.mjs",
+    "seed:generate": "node scripts/generate-seed.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "check": "node --check src/worker.js && node --check src/imports.js && node --check src/operations.js && node --check src/admin.js && node --check public/app.js && npm test",
+    "deploy": "wrangler deploy",
+    "cf:dev": "wrangler dev",
+    "cf:seed:local": "wrangler d1 migrations apply tidepath-demo --local && wrangler d1 execute tidepath-demo --local --file seed/demo.sql",
+    "setup:workspace": "node scripts/bootstrap.mjs"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "devDependencies": {
+    "wrangler": "4.157.0"
+  }
+}

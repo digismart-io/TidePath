@@ -1,0 +1,23 @@
+{
+  "rate_attended": 821,
+  "rate_absent": 36,
+  "students": 100,
+  "guardians": 70,
+  "households": 70,
+  "programs": 5,
+  "program_enrollments": 130,
+  "enrollment_rows": 131,
+  "sessions": 66,
+  "submitted_sessions": 63,
+  "cancelled_sessions": 1,
+  "incomplete_sessions": 2,
+  "expected_attendance": 1056,
+  "attended": 961,
+  "absent": 36,
+  "excused": 59,
+  "unmarked": 31,
+  "approved_hours": 200,
+  "pending_hours": 17,
+  "assessment_pairs": 75,
+  "average_gain": 0.7466666666666667
+}

@@ -1,0 +1,11 @@
+import { mkdirSync, readFileSync, readdirSync } from 'node:fs';
+import { openDatabase } from './sqlite.mjs';
+import { generateSeed } from './generate-seed.mjs';
+mkdirSync('.local',{recursive:true});
+const {sqlite,close}=openDatabase('.local/tidepath.sqlite');
+sqlite.exec('PRAGMA foreign_keys=OFF;');
+for(const {name} of sqlite.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all()) sqlite.exec(`DROP TABLE "${name.replaceAll('"','""')}"`);
+sqlite.exec('PRAGMA foreign_keys=ON;');
+for(const file of readdirSync('migrations').filter(f=>f.endsWith('.sql')).sort())sqlite.exec(readFileSync('migrations/'+file,'utf8'));
+sqlite.exec(generateSeed().sql);close();
+console.log('Local demo reset to fictional September 24, 2026. Remote databases are untouched.');
