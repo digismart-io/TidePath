@@ -12,7 +12,7 @@ Sign in as Marisol. The dashboard should show:
 - 2 open follow-ups.
 - 200 approved volunteer hours and 17 pending hours.
 - 2 unfinished rosters with 31 unmarked entries.
-- 75 paired assessments and 5 missing end assessments.
+- 75 historical paired assessments, retained with collection off by default. There are no assessment reminders or assessment gaps until a manager enables collection. Enabling all three regular programs reveals 5 missing end responses.
 
 The school transfer produces 131 enrollment-period rows, but only 130 distinct child–program enrollments. Families and guardians are distinct concepts even though this seed has one guardian per household.
 
@@ -73,7 +73,7 @@ Open **Participants → a child → Why a follow-up?** Each program shows its co
 
 ## Outcome entry
 
-Open **Participants → a child → Record assessment**, or use the Reports button. Select the enrolled mentoring/workshop program, start/end phase, reported 1–5 score and quarter date. Use the program's actual question/scale; these are voluntary non-clinical self-assessments. An end requires a start and cannot precede it. Existing values require explicit correction confirmation; audit entries preserve previous values. Reports recalculate pairs, missing ends and descriptive score changes immediately.
+First enable optional assessments under **Manage workspace → Programs → Edit** for the relevant regular program. Then open **Participants → a child → Record assessment**, or use the Reports button. Select the enrolled mentoring/workshop program, start/end phase, reported 1–5 score and quarter date. Use the program's actual question/scale; these are voluntary non-clinical self-assessments. An end requires a start and cannot precede it. Existing values require explicit correction confirmation; audit entries preserve previous values. Reports recalculate pairs, missing ends and descriptive score changes immediately.
 
 For a fresh local demo, Amelia Thompson has a Harbor start assessment and no end. Record a genuine demo end response to increase paired assessments by one and reduce missing ends by one. No clinical screening or counseling intake is added.
 
@@ -95,7 +95,7 @@ For local rehearsal, open Sofia Rivera, edit Rosa Rivera’s invented email/phon
 
 ## Weekly and daily reminders
 
-Overview opens the seven-day action brief. On a fresh seed: two families need contact, two sessions need attendance (one overdue), two family tasks are overdue, zero start responses and five end responses are missing, and 13 contribution entries totaling 17 hours await review. Each action shows its owner and opens the corresponding attendance, concern, assessment form or approval queue. Newly enrolled regular-program children without a baseline appear as missing start responses; optional events do not require assessments.
+Overview opens the seven-day action brief. On a fresh seed: two families need contact, two sessions need attendance (one overdue), two family tasks are overdue, assessment collection is off with no missing-response tasks, and 13 contribution entries totaling 17 hours await review. Each action shows its owner and opens the corresponding attendance, concern, assessment form or approval queue. For programs explicitly enabled by a manager, newly enrolled children without a baseline appear as missing start responses. Disabled programs and optional events do not require assessments. Switching collection off again removes these tasks without deleting scores or frozen reports.
 
 Click **Run weekly check**. The check records its execution and refreshes three in-app reminders in the fresh seed (one overdue session and two overdue follow-ups). Repeating it does not duplicate reminders. Completing the underlying work and checking again resolves the reminder. Hosted Cron runs the same routine daily at 13:00 UTC. The local server requires the button; it has no scheduler. Demo checks use September 24, not the actual wall-clock day. No external message is sent.
 

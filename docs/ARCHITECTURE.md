@@ -50,11 +50,11 @@ This is signup ingestion with confirmed links. It does not collapse two existing
 
 ## Outcomes and quarterly evidence
 
-Managers record voluntary 1–5 start/end self-assessments for enrolled mentoring/workshop participants. An end requires a start; dates must be ordered and within the configured quarter. Corrections require confirmation and a current expected value; audit records retain the prior value.
+Assessments default to off per program, with no database migration or score deletion. Managers opt in via the program settings; only enabled regular participation programs allow new entries or generate missing-response reminders and quarter-close gaps. Turning collection off retains all prior scores and frozen report versions. Managers record voluntary 1–5 start/end self-assessments for enrolled mentoring/workshop participants. An end requires a start; dates must be ordered and within the configured quarter. Corrections require confirmation and a current expected value; audit records retain the prior value.
 
 Report numbers come from database records. The regular attendance rate is `(present + late) / (present + late + unexplained absent)` for submitted regular sessions. Optional events, excused absences, cancelled sessions and unsubmitted attendance are excluded from that rate. Event check-ins remain visible in recorded visits. Only approved volunteer hours contribute to the approved-hours total.
 
-Assessment reporting pairs start/end records and discloses missing end responses. Score change is descriptive non-clinical feedback, not causal evidence of effectiveness. Reports show source records, download JSON evidence and print to PDF. The quarter is configured in seeded settings; the quarter-close flow saves dated report snapshots with frozen source records, checklist gaps and staff disclosure notes.
+Assessment reporting pairs start/end records and shows averages separately by program, including labelled historical records for disabled programs. Missing end responses are disclosed only for enabled programs. The legacy combined average remains in the API for compatibility but is not displayed or used in report narratives. Score change is descriptive non-clinical feedback, not causal evidence of effectiveness. Reports show source records, download JSON evidence and print to PDF. The quarter is configured in seeded settings; the quarter-close flow saves dated report snapshots with frozen source records, checklist gaps and staff disclosure notes.
 
 ## AI boundary
 

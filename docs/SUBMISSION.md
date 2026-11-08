@@ -25,7 +25,7 @@ TidePath provides a working, connected program workspace: family signup becomes 
 1. Open **Participants → Import CSV**. Use the supplied messy file containing Rosa Rivera, R. Rivera and “Rivera, Rosa”. Confirm that all three source rows refer to one existing guardian and child. Import and repeat: no duplicate identities are created, and the repeated source rows are skipped.
 2. Sign in as **Elena**. Only her assigned Harbor sessions are visible. In a fresh local seed, open September 22, mark remaining students present, mark Sofia Rivera absent, and submit attendance. Her consecutive mentoring absences create an assigned follow-up immediately.
 3. Return as **Marisol**. Open the task, inspect the supporting history, request a Spanish guardian-message draft and record a simulated contact. Explain that outreach is simulated and resolution remains a separate staff decision.
-4. Open **Amelia Thompson → Record assessment**. In a fresh seed, add her missing Harbor end response. The report’s paired-response and missing-response figures change from saved evidence.
+4. Optionally enable assessments for Harbor Mentors under **Manage workspace → Programs → Edit**, then open **Amelia Thompson → Record assessment**. In a fresh seed, add her missing Harbor end response. The report’s paired-response and missing-response figures change from saved evidence.
 5. Open **Marisol’s week**, run the check and show the assigned unfinished work. Choose **Close the quarter**, review its checklist, disclose remaining gaps and save a dated snapshot. Open saved evidence or download/print the version. Before September 30 the snapshot is correctly labeled provisional.
 
 Use the [rehearsal guide](TEST-GUIDE.md) for exact fresh-seed totals, test accounts and reset instructions. The shared live demo may have additional activity from testing. Demo writes are real writes to fictional records.
@@ -42,7 +42,7 @@ Cloudflare Workers AI hosts Meta Llama 3.3 70B Instruct. It drafts message wordi
 
 ## Validation and current limits
 
-The repository includes 68 passing automated tests for permissions, record linkage, attendance completeness and concurrency, follow-up behavior, assessments, CSV identity review, rollback, repeat imports and report calculations. Local browser rehearsals exercised successful writes without adding test data to the live deployment.
+The repository includes 72 automated tests for permissions, record linkage, attendance completeness and concurrency, follow-up behavior, assessments, CSV identity review, rollback, repeat imports and report calculations. Local browser rehearsals exercised successful writes without adding test data to the live deployment.
 
 The prototype demonstrates the workflow; it does not yet establish measured time savings or guarantee that every family receives timely contact. There is no live spreadsheet synchronization, real outbound messaging, offline attendance synchronization or historical attendance import. CSV review links new source rows to confirmed identities; it does not destructively merge existing profiles. Reports use the configured demo quarter.
 

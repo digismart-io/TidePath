@@ -41,3 +41,8 @@ Reporting dates select the current operational quarter. Existing frozen report v
 Install from the app’s **Install app** guidance or the browser menu. HTTPS is required outside localhost. The offline shell contains no cached API responses, student records or queued submissions. Network connectivity is required for records and saves. Shared devices need sign-out between users.
 
 Email, SMS and WhatsApp delivery are simulated. A provider integration needs verified sender details, protected credentials, recipient decisions, delivery events and failure handling. Simulated sends do not prove actual contact. AI drafts always require human review.
+
+
+## Optional program assessments
+
+Assessments default to off. In Manage workspace → Programs → Edit, enable optional start/end assessments only for a regular participation program with an agreed outcome question and 1–5 scale. Outcome measures may be blank when collection is off. This setting is independent of attendance and mentoring. Switching off retains scores, audit history and frozen report versions; it stops new entries and missing-response reminders and removes those responses from quarter-close gaps. Existing feedback remains readable, labelled historical in live reports, with averages separated by program. Switching back on resumes collection from existing records.
