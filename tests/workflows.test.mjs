@@ -319,3 +319,38 @@ test('volunteer languages require explicit multi-language entry and persist thro
  const state=await call(env,'/state',{cookie});assert.deepEqual(JSON.parse(state.data.volunteers.find(v=>v.id===row.id).languages),['Spanish','Portuguese']);
  assert.equal(sqlite.prepare("SELECT languages FROM volunteers WHERE id='volunteer-001'").get().languages,'[]');
 });
+
+
+test('authorization matrix blocks direct manager-resource requests before any record mutation',async t=>{
+ const {env,sqlite}=setup(t),manager=await login(env),teacher=await login(env,'elena');
+ const preview=(await call(env,'/quarter/close',{cookie:manager})).data;const snapshot=await call(env,'/quarter/snapshots',{method:'POST',cookie:manager,data:{expected:preview.fingerprint,reviewed:true,notes:'Fictional permission audit; all gaps disclosed.'}});assert.equal(snapshot.status,201);
+ const follow=sqlite.prepare('SELECT id FROM followups LIMIT 1').get().id,hours=sqlite.prepare('SELECT id FROM volunteer_hours LIMIT 1').get().id;
+ const paths=['/students/student-001','/guardians/guardian-001','/followups','/followups/'+follow,'/followups/'+follow+'/draft','/followups/'+follow+'/events','/hours','/hours/'+hours,'/matches','/assessments','/report','/report/draft','/import/preview','/import/commit','/operations/check','/quarter/close','/quarter/snapshots','/quarter/snapshots/'+snapshot.data.id,'/admin','/admin/programs','/admin/programs/harbor','/admin/groups/harbor-bayview','/admin/staff/marisol','/admin/volunteers/volunteer-001','/admin/settings','/admin/sessions'];
+ const before=JSON.stringify(sqlite.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name").all().map(({name})=>[name,sqlite.prepare('SELECT * FROM '+name+' ORDER BY rowid').all()]));
+ for(const path of paths)for(const method of ['GET','POST','PUT','PATCH','DELETE'])for(const cookie of [undefined,teacher]){
+  const r=await call(env,path,{method,cookie,...(method==='GET'?{}:{data:{role:'manager',staff_id:'marisol',owner_id:'marisol',tenant_id:'other'}})});assert.equal(r.status,cookie?403:401,method+' '+path);assert.deepEqual(Object.keys(r.data),['error']);
+ }
+ const after=JSON.stringify(sqlite.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name").all().map(({name})=>[name,sqlite.prepare('SELECT * FROM '+name+' ORDER BY rowid').all()]));assert.equal(after,before);
+});
+
+test('roster ID and student ID tampering cannot access another group or change its attendance',async t=>{
+ const {env,sqlite}=setup(t),teacher=await login(env,'elena');const before=JSON.stringify(sqlite.prepare('SELECT * FROM attendance ORDER BY session_id,student_id').all());
+ for(const method of ['GET','PUT','DELETE'])assert.equal((await call(env,'/sessions/wave-riverside-12?role=manager',{method,cookie:teacher,...(method==='GET'?{}:{data:{role:'manager',version:0,entries:[]}})})).status,403);
+ const own=(await call(env,'/sessions/harbor-bayview-12',{cookie:teacher})).data;assert.equal(own.session.group_id,'harbor-bayview');
+ const outsider=sqlite.prepare('SELECT student_id FROM attendance WHERE session_id=? AND student_id NOT IN (SELECT student_id FROM attendance WHERE session_id=?) LIMIT 1').get('wave-riverside-12','harbor-bayview-12').student_id;
+ const bad=await call(env,'/sessions/harbor-bayview-12',{method:'PUT',cookie:teacher,data:{version:own.session.version,entries:[...own.roster.map(r=>({student_id:r.student_id,status:'present'})),{student_id:outsider,status:'absent'}]}});assert.equal(bad.status,400);
+ assert.equal(JSON.stringify(sqlite.prepare('SELECT * FROM attendance ORDER BY session_id,student_id').all()),before);
+ assert.equal(sqlite.prepare("SELECT version FROM sessions WHERE id='harbor-bayview-12'").get().version,own.session.version);
+});
+
+test('separate nonprofit databases do not accept one another’s session cookies even with identical record IDs',async t=>{
+ const a=setup(t),b=setup(t),manager=await login(a.env),teacher=await login(a.env,'elena');
+ for(const cookie of [manager,teacher])for(const path of ['/state','/students/student-001','/sessions/harbor-bayview-12','/admin'])assert.equal((await call(b.env,path,{cookie})).status,401);
+ assert.equal((await call(a.env,'/state',{cookie:manager})).status,200);
+});
+
+test('unknown roles fail closed even if a future schema or external write introduces one',async t=>{
+ const {env,sqlite}=setup(t),teacher=await login(env,'elena');sqlite.exec('PRAGMA ignore_check_constraints=ON');sqlite.prepare("UPDATE staff SET role='observer' WHERE id='elena'").run();sqlite.exec('PRAGMA ignore_check_constraints=OFF');
+ for(const path of ['/state','/sessions/harbor-bayview-12','/admin'])assert.equal((await call(env,path,{cookie:teacher})).status,401);
+ assert.equal((await call(env,'/login',{method:'POST',data:{email:'elena@tidepath.example',password:DEMO_PASSWORD}})).status,401);
+});

@@ -3,7 +3,7 @@ node_modules/
 .local/
 .dev.vars
 .env*
-!\.env.example
+!.env.example
 artifacts/
 *.log
 .DS_Store

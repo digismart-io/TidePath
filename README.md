@@ -54,7 +54,7 @@ Follow the [three-minute walkthrough and rehearsal guide](docs/TEST-GUIDE.md). F
 
 ## Run locally
 
-Requires Node.js 24 or newer and npm.
+Requires Node.js 22.13 or newer and npm; Node 24 is recommended (`nvm use`). The minimum reflects the unflagged built-in `node:sqlite` API.
 
 ```sh
 git clone https://github.com/digismart-io/TidePath.git
@@ -64,6 +64,8 @@ npm run db:reset
 npm run dev
 ```
 
+Optionally copy `.env.example` to `.env` to configure the local port and demo mode. The development and bootstrap commands load it automatically.
+
 Open `http://localhost:8787`. The local app runs the same Worker handlers against persistent SQLite, without calling a hosted AI service. Template drafting is labeled explicitly. Node may print an experimental SQLite notice.
 
 `npm run db:reset` replaces the **local** demo database. Stop the local server before resetting, restart it afterward, and sign in again. It does not change the hosted demo.
@@ -72,7 +74,7 @@ Open `http://localhost:8787`. The local app runs the same Worker handlers agains
 npm run check
 ```
 
-The check includes JavaScript syntax validation and **64 automated tests** covering permissions, attendance submission and concurrency, family registration, follow-up rules, assessments, CSV matching, transaction rollback, repeat imports and report reconciliation. Tests use isolated databases and cover administration, account permissions, migration safety, clean workspace setup and PWA caching boundaries.
+The check includes JavaScript syntax validation and **68 automated tests** covering permissions, attendance submission and concurrency, family registration, follow-up rules, assessments, CSV matching, transaction rollback, repeat imports and report reconciliation. Tests use isolated databases and cover administration, account permissions, migration safety, clean workspace setup and PWA caching boundaries.
 
 ## Adapt it to another nonprofit
 
@@ -94,7 +96,7 @@ The hosted model uses the **Cloudflare account that deploys the Worker**, not a 
 
 ## Deploy your own copy
 
-A branch or fork copies code and public configuration, **not Cloudflare login credentials**. Create your own D1 database, update the configuration, and change the Programs page links to your deployed app. The committed database identifier and demo URLs refer to the original hackathon deployment.
+A branch or fork copies code and public configuration, **not Cloudflare login credentials**. Create your own D1 database using `wrangler.example.jsonc` as a configuration template, then set your deployed app URL once in `docs/site-config.js`. The original demo reset intentionally refuses other database IDs. The committed database identifier and demo URLs refer to the original hackathon deployment.
 
 Follow the [deployment guide](docs/DEPLOYMENT.md). It covers local credentials, optional AI, GitHub Pages and the distinction between a new-account setup and updating an existing deployment.
 
@@ -134,3 +136,5 @@ Time savings and real-world outcomes have not been measured. See [the source bri
 - [Design tokens](design.md)
 
 Software: [MIT license](LICENSE). Third-party images and the hosted AI model retain their respective licenses.
+
+Contribution and access guidance: [CONTRIBUTING.md](CONTRIBUTING.md) · [SECURITY.md](SECURITY.md).

@@ -4,7 +4,7 @@
 
 The repository contains app source, fictional seed records, public demo credentials, image assets and deployment configuration. It does not contain the Cloudflare OAuth login used on the original developer’s computer. `.env*`, `.dev.vars`, `.wrangler/` and local database files are ignored by Git.
 
-The current `wrangler.jsonc` names the original demo Worker and D1 database. Its database ID is a resource identifier, not an access credential. Copying it does not authorize access. The public Programs page also contains links to the original live app, which must be changed for an independent deployment.
+The current `wrangler.jsonc` names the original demo Worker and D1 database. Its database ID is a resource identifier, not an access credential. Copying it does not authorize access. The public Programs website uses `docs/site-config.js` for its app URL; change that one setting for an independent deployment.
 
 Creating a Git branch does not deploy anything. GitHub Pages is currently configured to serve `/docs` from `main`; a copied branch is not automatically published there.
 
@@ -20,7 +20,7 @@ npm run db:reset
 npm run dev
 ```
 
-Requires Node.js 24+. Local SQLite and hosted D1 are separate. Tests use isolated in-memory SQLite databases; they do not call live AI or change the hosted demo.
+Requires Node.js 22.13+; Node 24 is recommended. Local SQLite and hosted D1 are separate. Tests use isolated in-memory SQLite databases; they do not call live AI or change the hosted demo.
 
 ```sh
 npm run check
@@ -38,16 +38,16 @@ npm run check
 2. Create a dedicated database for this copy.
 
    ```sh
-   npx wrangler d1 create tidepath-demo
+   npx wrangler d1 create your-nonprofit
    ```
 
-3. Edit `wrangler.jsonc`. Replace `d1_databases[0].database_id` with the ID returned above. If you choose a different database name, update that field and the commands below consistently. Choose an available Worker `name`; retain the `DB` and `ASSETS` binding names because the code uses them. If Wrangler asks you to choose an account, select the account containing the new database.
+3. Copy `wrangler.example.jsonc` to `wrangler.jsonc` for a new deployment, then edit it. Replace `d1_databases[0].database_id` with the ID returned above. If you choose a different database name, update that field and the commands below consistently. Choose an available Worker `name`; retain the `DB` and `ASSETS` binding names because the code uses them. If Wrangler asks you to choose an account, select the account containing the new database.
 
-4. Apply all schema migrations, then load the fictional seed into the **new, empty** database.
+4. For a fictional demo, set `vars.DEMO_MODE` to `"true"`, apply all schema migrations, then load the fictional seed into the **new, empty** database. For a real empty workspace, keep the template’s `"false"` setting and follow [WORKSPACE.md](WORKSPACE.md) instead of loading seed records.
 
    ```sh
-   npx wrangler d1 migrations apply tidepath-demo --remote
-   npx wrangler d1 execute tidepath-demo --remote --file seed/demo.sql
+   npx wrangler d1 migrations apply your-nonprofit --remote
+   npx wrangler d1 execute your-nonprofit --remote --file seed/demo.sql
    ```
 
    Seeding inserts records and is not an update operation. Do not rerun it against populated data. Migration `0003_import_records.sql` adds CSV tracking; `0004_operations_and_snapshots.sql` adds in-app reminders, check history and protected report snapshots.
@@ -74,7 +74,7 @@ To deploy without hosted inference, remove the `ai` binding configuration. The W
 
 The static website is `docs/index.html`, with relative image paths under `docs/assets/` and a `.nojekyll` file. It can be served by GitHub Pages independently of the Worker.
 
-1. In `docs/index.html`, replace every `https://tidepath-demo.go-610.workers.dev/` destination with your app URL, including the JavaScript registration handoff. Update README demo links too.
+1. Set `appURL` in `docs/site-config.js` to your deployed app URL. The catalog fetch, registration handoff and staff links all use this setting. Update README demo links for your fork too.
 2. In the repository’s **Settings → Pages**, choose **Deploy from a branch**, the branch containing the app, and `/docs`.
 3. Wait for the Pages build to complete, then open the returned URL.
 4. Choose a program and language, continue to family registration, and confirm the app opens with those choices. No family contact details are collected on the static page.
@@ -110,3 +110,5 @@ npm run demo:reset:remote -- --confirm=tidepath-demo
 It deletes demo activity, saved report versions, reminders and sessions before restoring the seed. The guarded reset temporarily removes the snapshot-delete protection and reinstalls it afterward. It is restricted to the original database ID and refuses a fork’s different ID. It is not a deployment step or a general reset tool for other accounts.
 
 For an empty nonprofit workspace, follow [WORKSPACE.md](WORKSPACE.md) instead of importing the fictional seed.
+
+Local settings: copy `.env.example` to `.env`. The local dev/bootstrap commands load this optional file; Cloudflare deployments use `wrangler.jsonc`. Do not copy secrets into committed examples. The database ID repeated in `reset-remote.mjs` is an intentional allowlist for the original disposable database; do not replace it to reset a fork.
