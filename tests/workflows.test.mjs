@@ -101,6 +101,47 @@ test('assessment entry validates enrollment, scale, baseline and chronology with
 const intakeHeaders='source_system,source_id,guardian_name,email,language,neighborhood,first_name,last_name,age,group_id,phone';
 const intakeCSV=rows=>intakeHeaders+'\n'+rows.join('\n');
 const intakeNew=intakeCSV(['test-sheet,row-1,New Demo Guardian,new-import@example.com,English,Little Havana,New,Child,7,together-havana,','test-sheet,row-2,N. Guardian,alternate@example.com,English,Little Havana,Second,Child,8,together-havana,']);
+test('twenty clearly new CSV rows import without per-row decisions and repeat safely',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env),groups=['minds-havana','minds-river','together-havana','together-river'];
+ const csv=intakeCSV(Array.from({length:20},(_,i)=>`automatic,row-${i},Demo Guardian ${i},automatic-${i}@example.com,${['English','Spanish','Haitian Creole'][i%3]},${groups[Math.floor(i/5)].endsWith('-river')?'West Little River':'Little Havana'},Demo${i},Importchild,12,${groups[Math.floor(i/5)]},`));
+ const beforeAttendance=sqlite.prepare("SELECT * FROM attendance a JOIN sessions s ON s.id=a.session_id WHERE s.status='submitted'").all();
+ const preview=await call(env,'/import/preview',{method:'POST',cookie,data:{csv}});assert.equal(preview.status,200);assert.deepEqual(preview.data.summary,{ready_rows:20,review_rows:0,skipped_rows:0,new_households:20,new_children:20});assert.deepEqual(preview.data.capacity_errors,[]);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM students').get().n,100);
+ const result=await call(env,'/import/commit',{method:'POST',cookie,data:{csv,decisions:Array.from({length:20},()=>({auto:true}))}});assert.equal(result.status,201,JSON.stringify(result.data));assert.equal(result.data.new_children,20);assert.equal(result.data.new_households,20);assert.equal(result.data.new_enrollments,20);
+ const repeat=await call(env,'/import/commit',{method:'POST',cookie,data:{csv}});assert.equal(repeat.status,201);assert.equal(repeat.data.skipped,20);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM students').get().n,120);
+ assert.deepEqual(sqlite.prepare("SELECT * FROM attendance a JOIN sessions s ON s.id=a.session_id WHERE s.status='submitted'").all(),beforeAttendance);assert.equal(sqlite.prepare('PRAGMA foreign_key_check').all().length,0);
+});
+test('identical new family details group siblings and repeated child rows without duplicate people',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env),csv=intakeCSV(['automatic,a,Shared Demo Adult,shared-new@example.com,Spanish,Little Havana,Luz,Newhouse,12,together-havana,305-555-0198','automatic,b,Shared Demo Adult,shared-new@example.com,Spanish,Little Havana,Sol,Newhouse,12,together-havana,305-555-0198','automatic,c,Shared Demo Adult,shared-new@example.com,Spanish,Little Havana,Luz,Newhouse,12,minds-havana,305-555-0198']);
+ const preview=(await call(env,'/import/preview',{method:'POST',cookie,data:{csv}})).data;assert.equal(preview.summary.ready_rows,3);assert.equal(preview.summary.new_households,1);assert.equal(preview.summary.new_children,2);assert.deepEqual(preview.rows[2].suggested_decision,{guardian:'row:0',child:'row:0'});
+ const result=await call(env,'/import/commit',{method:'POST',cookie,data:{csv}});assert.equal(result.status,201,JSON.stringify(result.data));assert.equal(result.data.new_households,1);assert.equal(result.data.new_children,2);assert.equal(result.data.new_enrollments,3);
+ const imported=sqlite.prepare('SELECT * FROM import_records ORDER BY source_id').all();assert.equal(new Set(imported.map(r=>r.guardian_id)).size,1);assert.equal(imported[0].student_id,imported[2].student_id);
+});
+test('existing names, emails, phones and conflicting CSV identities require review without automatic merging',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env);
+ for(const row of ['review,a,Other Adult,family1@example.com,English,Little Havana,New,Person,12,together-havana,','review,a,Rosa Rivera,other@example.com,English,Little Havana,New,Person,12,together-havana,','review,a,Other Adult,other@example.com,English,Little Havana,New,Person,12,together-havana,305-555-0100']){
+  const csv=intakeCSV([row]),preview=(await call(env,'/import/preview',{method:'POST',cookie,data:{csv}})).data;assert.equal(preview.summary.review_rows,1);assert.equal(preview.rows[0].suggested_decision,null);assert.equal((await call(env,'/import/commit',{method:'POST',cookie,data:{csv}})).status,409);
+ }
+ for(const second of ['Other Adult,shared@example.com,English,Little Havana,Sol,Newhouse,12,together-havana,305-555-0199','Shared Adult,different@example.com,English,Little Havana,Sol,Newhouse,12,together-havana,305-555-0199','Shared Adult,shared@example.com,English,Little Havana,Luz,Newhouse,13,together-havana,305-555-0199']){
+  const csv=intakeCSV(['review,a,Shared Adult,shared@example.com,English,Little Havana,Luz,Newhouse,12,together-havana,305-555-0199','review,b,'+second]),preview=(await call(env,'/import/preview',{method:'POST',cookie,data:{csv}})).data;assert.equal(preview.rows[1].review_required,true);assert.equal((await call(env,'/import/commit',{method:'POST',cookie,data:{csv}})).status,409);
+ }
+ assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM students').get().n,100);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM import_records').get().n,0);
+});
+test('automatic decisions are recomputed before saving when another import creates a possible match',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env),csv=intakeCSV(['stale,a,Fresh Demo Adult,fresh-demo@example.com,English,Little Havana,Luz,Newhouse,12,together-havana,']);
+ assert.equal((await call(env,'/import/preview',{method:'POST',cookie,data:{csv}})).data.summary.ready_rows,1);
+ assert.equal((await call(env,'/import/commit',{method:'POST',cookie,data:{csv:csv.replace('stale,a','other,a')}})).status,201);
+ const result=await call(env,'/import/commit',{method:'POST',cookie,data:{csv,decisions:[{auto:true}]}});assert.equal(result.status,409);assert.match(result.data.error,/possible match needs review/);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM students').get().n,101);
+});
+test('automatic import checks capacity in preview and refuses the whole batch if places disappear',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env),csv=intakeCSV(['capacity,a,Fresh Adult,new-capacity@example.com,English,Little Havana,Luz,Newhouse,12,together-havana,']);
+ assert.deepEqual((await call(env,'/import/preview',{method:'POST',cookie,data:{csv}})).data.capacity_errors,[]);
+ sqlite.prepare("UPDATE groups SET capacity=0 WHERE id='together-havana'").run();assert.equal((await call(env,'/import/preview',{method:'POST',cookie,data:{csv}})).data.capacity_errors.length,1);assert.equal((await call(env,'/import/commit',{method:'POST',cookie,data:{csv}})).status,409);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM students').get().n,100);
+});
+test('automatic CSV import remains manager-only and never writes records for unauthorized requests',async t=>{
+ const {env,sqlite}=setup(t),teacher=await login(env,'elena'),csv=intakeCSV(['auth,a,Fresh Adult,new-auth@example.com,English,Little Havana,Luz,Newhouse,12,together-havana,']);
+ for(const path of ['/import/preview','/import/commit'])for(const auth of [{},{cookie:teacher}])assert.equal((await call(env,path,{method:'POST',...auth,data:{csv}})).status,auth.cookie?403:401);
+ assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM students').get().n,100);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM households').get().n,70);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM audit_log').get().n,0);
+});
 test('CSV preview is read-only and proposes evidence without automatically merging different identities',async t=>{
  const {env,sqlite}=setup(t),cookie=await login(env),csv=intakeCSV(['legacy,row-1,R. Rivera,family1@example.com,Spanish,Little Havana,Sofia,Rivera,12,together-havana,305-555-0100']);
  const preview=await call(env,'/import/preview',{method:'POST',cookie,data:{csv}});assert.equal(preview.status,200,JSON.stringify(preview.data));assert.ok(preview.data.rows[0].candidates.some(c=>c.guardian_id==='guardian-001'&&c.signals.includes('same email')));
