@@ -4,7 +4,7 @@ A shared visual system for the application, adopted from the user-supplied Progr
 
 ## Provenance
 
-Source: `/Users/jnf/Downloads/tidepath-programs/index.html`, `preview-desktop.png`, `preview-mobile.png`, and supplied assets. The user explicitly selected this as the style for the entire TidePath app. Palette and font names come from the HTML, with visual hierarchy checked against both previews. See docs/STYLE-REFERENCE.md for supplied photo credits.
+Source: `preview-desktop.png`, `preview-mobile.png`, and supplied assets. The user explicitly selected this as the style for the entire TidePath app. Palette and font names come from the HTML, with visual hierarchy checked against both previews. See docs/STYLE-REFERENCE.md for supplied photo credits.
 
 ## Genre and structure
 
