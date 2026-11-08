@@ -26,7 +26,7 @@ Do not import `seed/demo.sql`. Setup verifies the staff table is empty and refus
 
 ## Configure the workspace
 
-Sign in as the first manager and open **Manage workspace**. Set organization name, service areas and reporting dates. Create programs, then groups, volunteers and staff. Assign each session leader to the groups they should access. Register children or import reviewed signups, then schedule sessions. Assign mentors from **Volunteers → Mentor matches**.
+Sign in as the first manager and open **Manage workspace**. Set organization name, service areas and reporting dates. Create programs, then groups, volunteers and staff. Assign each session leader to the groups they should access. Register children or import reviewed signups, then schedule sessions. Record one or more spoken languages for each volunteer or mentor: English, Spanish, Haitian Creole or other languages. Existing records remain “Not recorded” until staff confirm them. Mentor selection displays these languages; matches remain a staff decision. Assign mentors from **Volunteers → Mentor matches**.
 
 Programs include public descriptions, age ranges, outcomes and structured profile details. Counseling can remain an external secure intake. Programs and groups with history retain their original context; incompatible edits are rejected. Archive records rather than deleting history. A mentor with active matches must be reassigned before archiving. A staff member with open follow-ups must transfer ownership before deactivation. A manager cannot remove their own manager access.
 

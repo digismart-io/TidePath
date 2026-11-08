@@ -2,7 +2,7 @@
 
 **Record once. Know who needs a call. Explain every number.**
 
-TidePath connects family registration, attendance, mentors, volunteer hours, family follow-ups and quarterly reporting for a small youth nonprofit. It addresses **Challenge 1: From sign-up to quarterly report** for Marisol, Tidepath Family Alliance’s program manager.
+TidePath is a program management app demonstrated with **Tidepath Family Alliance, a fictional youth nonprofit**. It connects family registration, attendance, mentors, volunteer hours, family follow-ups and quarterly reporting in one workspace. All demonstration records are made up.
 
 [Open the working app](https://tidepath-demo.go-610.workers.dev/) · [Explore the Programs website](https://digismart-io.github.io/TidePath/) · [Read the submission overview](docs/SUBMISSION.md)
 
@@ -10,7 +10,7 @@ TidePath connects family registration, attendance, mentors, volunteer hours, fam
 
 ## What it does
 
-| Marisol’s problem | Working solution |
+| Program management need | App feature |
 | --- | --- |
 | Retyping family signups across lists | One family form, multiple children, connected household and enrollment records |
 | The same guardian appears under different names | CSV preview suggests possible matches; a manager confirms identities before import |
@@ -20,7 +20,7 @@ TidePath connects family registration, attendance, mentors, volunteer hours, fam
 | Mentor lists and volunteer hours are separate | Mentor assignment history and approved volunteer contributions share the same records |
 | Quarter-end numbers do not agree | Computed metrics, source-record drill-down, assessment entry, narrative drafting and printable reports |
 
-The opening **“Marisol, here’s your week”** brief links families needing contact, attendance to finish, missing end responses and pending volunteer hours to their next actions and owners. A daily check refreshes in-app reminders. **Close the quarter** guides review and saves a dated, frozen report version with evidence and disclosed gaps.
+The opening weekly brief links families needing contact, attendance to finish, missing end responses and pending volunteer hours to their next actions and owners. A daily check refreshes in-app reminders. **Close the quarter** guides review and saves a dated, frozen report version with evidence and disclosed gaps.
 
 Each participant’s **Why a follow-up?** section explains their submitted attendance, unsubmitted sessions and existing tasks. No manager approval is needed for attendance: submission immediately updates follow-up rules and report totals. Optional family events do not trigger absence alerts.
 
@@ -39,7 +39,7 @@ Choose a role on the [sign-in screen](https://tidepath-demo.go-610.workers.dev/)
 
 | Account | Role | Access |
 | --- | --- | --- |
-| `marisol@tidepath.example` | Program manager | Families, participants, imports, all sessions, follow-ups, mentors, hours, assessments and reports |
+| `marisol@tidepath.example` | Demo manager | Families, participants, imports, all sessions, follow-ups, mentors, hours, assessments and reports |
 | `elena@tidepath.example` | Session leader | Harbor Mentors at Bayview |
 | `james@tidepath.example` | Session leader | Assigned Bayview safety, Little Havana wellbeing and community-event sessions |
 | `priya@tidepath.example` | Session leader | Assigned Riverside safety, West Little River wellbeing and community-event sessions |
@@ -70,7 +70,7 @@ Open `http://localhost:8787`. The local app runs the same Worker handlers agains
 npm run check
 ```
 
-The check includes JavaScript syntax validation and **63 automated tests** covering permissions, attendance submission and concurrency, family registration, follow-up rules, assessments, CSV matching, transaction rollback, repeat imports and report reconciliation. Tests use isolated databases and cover administration, account permissions, migration safety, clean workspace setup and PWA caching boundaries.
+The check includes JavaScript syntax validation and **64 automated tests** covering permissions, attendance submission and concurrency, family registration, follow-up rules, assessments, CSV matching, transaction rollback, repeat imports and report reconciliation. Tests use isolated databases and cover administration, account permissions, migration safety, clean workspace setup and PWA caching boundaries.
 
 ## Adapt it to another nonprofit
 

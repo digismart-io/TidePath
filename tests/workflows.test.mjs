@@ -237,7 +237,7 @@ async function adminState(env,cookie){const r=await call(env,'/admin',{cookie});
 async function createGroup(env,cookie,program_id){const r=await call(env,'/admin/groups',{method:'POST',cookie,data:{program_id,name:'Demo mentoring group',school:'Demo Center',neighborhood:'Little Havana',weekday:'Tuesday',time:'4:00 p.m.',capacity:10,active:true}});assert.equal(r.status,201,JSON.stringify(r.data));return r.data.id;}
 test('managers can configure a new mentoring program, enroll children, assign mentors and schedule teacher attendance',async t=>{
  const {env,sqlite}=setup(t),cookie=await login(env),program=await createProgram(env,cookie),group=await createGroup(env,cookie,program);
- const volunteer=await call(env,'/admin/volunteers',{method:'POST',cookie,data:{name:'New Mentor Demo',email:'new-mentor@example.com',role:'Mentor',active:true}});assert.equal(volunteer.status,201);
+ const volunteer=await call(env,'/admin/volunteers',{method:'POST',cookie,data:{name:'New Mentor Demo',email:'new-mentor@example.com',role:'Mentor',languages:['English','Spanish'],active:true}});assert.equal(volunteer.status,201);
  const staff=await call(env,'/admin/staff',{method:'POST',cookie,data:{name:'New Teacher Demo',email:'new-teacher@tidepath.example',password:'Teacher-demo-2026!',role:'teacher',active:true,group_ids:[group]}});assert.equal(staff.status,201,JSON.stringify(staff.data));
  const csv=intakeCSV([`new-program,sofia,Rosa Rivera,family1@example.com,Spanish,Little Havana,Sofia,Rivera,11,${group},`]);const imported=await call(env,'/import/commit',{method:'POST',cookie,data:{csv,decisions:[{guardian:'guardian-001',child:'student-001'}]}});assert.equal(imported.status,201,JSON.stringify(imported.data));
  const match=await call(env,'/matches',{method:'POST',cookie,data:{student_id:'student-001',volunteer_id:volunteer.data.id,program_id:program}});assert.equal(match.status,200,JSON.stringify(match.data));assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM mentor_matches WHERE student_id='student-001' AND end_date IS NULL").get().n,2);
@@ -256,7 +256,7 @@ test('program and group edits preserve history, validate ages/capacity and archi
 });
 test('archived volunteers cannot receive new hours or matches and active mentors must be reassigned first',async t=>{
  const {env}=setup(t),cookie=await login(env),admin=await adminState(env,cookie),mentor=admin.volunteers.find(v=>v.id==='volunteer-001');assert.equal((await call(env,'/admin/volunteers/'+mentor.id,{method:'PUT',cookie,data:{...mentor,active:false}})).status,400);
- const helper=admin.volunteers.find(v=>v.id==='volunteer-006');assert.equal((await call(env,'/admin/volunteers/'+helper.id,{method:'PUT',cookie,data:{...helper,active:false}})).status,200);
+ const helper=admin.volunteers.find(v=>v.id==='volunteer-006');assert.equal((await call(env,'/admin/volunteers/'+helper.id,{method:'PUT',cookie,data:{...helper,languages:['English'],active:false}})).status,200);
  assert.equal((await call(env,'/hours',{method:'POST',cookie,data:{volunteer_id:helper.id,session_id:'harbor-bayview-12',hours:1,note:''}})).status,400);
 });
 test('staff group access can be reassigned and deactivation/password changes invalidate existing sessions',async t=>{
@@ -308,4 +308,14 @@ test('empty-workspace bootstrap creates one hashed manager, no sample children, 
  const result=spawnSync(process.execPath,['scripts/bootstrap.mjs','--local'],{env,encoding:'utf8'});assert.equal(result.status,0,result.stderr);assert.ok(!result.stdout.includes(env.TIDEPATH_ADMIN_PASSWORD));local=openDatabase(path);assert.equal(local.sqlite.prepare('SELECT COUNT(*) n FROM students').get().n,0);assert.equal(local.sqlite.prepare('SELECT COUNT(*) n FROM staff').get().n,1);assert.notEqual(local.sqlite.prepare('SELECT password_hash FROM staff').get().password_hash,env.TIDEPATH_ADMIN_PASSWORD);
  const apiEnv={DB:local.DB,DEMO_MODE:'false',ASSETS:{fetch:async()=>new Response('shell')}};const loginResponse=await call(apiEnv,'/login',{method:'POST',data:{email:env.TIDEPATH_ADMIN_EMAIL,password:env.TIDEPATH_ADMIN_PASSWORD}});assert.equal(loginResponse.status,200);const state=(await call(apiEnv,'/state',{cookie:loginResponse.cookie})).data;assert.equal(state.workspace.organization_name,'Test Community');assert.equal(state.students.length,0);assert.equal(state.report.demo,false);assert.equal(state.brief.counts.families_to_contact,0);
  const repeat=spawnSync(process.execPath,['scripts/bootstrap.mjs','--local'],{env,encoding:'utf8'});assert.notEqual(repeat.status,0);assert.equal(local.sqlite.prepare('SELECT COUNT(*) n FROM staff').get().n,1);
+});
+
+test('volunteer languages require explicit multi-language entry and persist through edits',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env);const base={name:'Language Demo',email:'language-demo@example.com',role:'Mentor',active:true};
+ for(const languages of [undefined,[],[''],['English','english'],'English',Array(21).fill('Spanish')])assert.equal((await call(env,'/admin/volunteers',{method:'POST',cookie,data:{...base,languages}})).status,400);
+ const created=await call(env,'/admin/volunteers',{method:'POST',cookie,data:{...base,languages:['English','Haitian Creole','Portuguese']}});assert.equal(created.status,201);
+ let row=(await adminState(env,cookie)).volunteers.find(v=>v.id===created.data.id);assert.deepEqual(JSON.parse(row.languages),['English','Haitian Creole','Portuguese']);
+ assert.equal((await call(env,'/admin/volunteers/'+row.id,{method:'PUT',cookie,data:{...row,languages:['Spanish','Portuguese']}})).status,200);
+ const state=await call(env,'/state',{cookie});assert.deepEqual(JSON.parse(state.data.volunteers.find(v=>v.id===row.id).languages),['Spanish','Portuguese']);
+ assert.equal(sqlite.prepare("SELECT languages FROM volunteers WHERE id='volunteer-001'").get().languages,'[]');
 });

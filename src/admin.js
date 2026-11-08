@@ -46,8 +46,9 @@ export async function administration(db,user,path,method,data,{passwordHash}){
   return save(db,user,table,id,old,{program_id:p.id,name:text(data.name,'Group name',120),school,neighborhood,weekday:text(data.weekday,'Meeting day',40),time:text(data.time,'Meeting time',80),capacity,active:active(data.active),version:data.version});
  }
  if(table==='volunteers'){
+  if(!Array.isArray(data.languages)||!data.languages.length||data.languages.length>20)fail(400,'Record at least one spoken language (maximum twenty).');const languages=data.languages.map(v=>text(v,'Spoken language',80));if(new Set(languages.map(v=>v.toLowerCase())).size!==languages.length)fail(400,'Choose each spoken language only once.');
   const role=text(data.role,'Volunteer role',80),enabled=active(data.active);if(old&&(old.role==='Mentor'&&role!=='Mentor'||!enabled)&&await first(db,'SELECT 1 FROM mentor_matches WHERE volunteer_id=? AND end_date IS NULL',id))fail(400,'Reassign this mentor’s active matches before changing their role or archiving them.');
-  return save(db,user,table,id,old,{name:text(data.name,'Volunteer name',120),email:email(data.email),role,active:enabled,version:data.version});
+  return save(db,user,table,id,old,{name:text(data.name,'Volunteer name',120),email:email(data.email),role,languages:JSON.stringify(languages),active:enabled,version:data.version});
  }
  if(table==='staff'){
   if(!['manager','teacher'].includes(data.role))fail(400,'Choose manager or session leader.');const enabled=active(data.active);if(old?.id===user.id&&(!enabled||data.role!=='manager'))fail(400,'Keep your own manager access active. Sign in as another manager to change it.');
