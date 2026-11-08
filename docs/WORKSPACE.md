@@ -41,3 +41,9 @@ Reporting dates select the current operational quarter. Existing frozen report v
 Install from the app’s **Install app** guidance or the browser menu. HTTPS is required outside localhost. The offline shell contains no cached API responses, student records or queued submissions. Network connectivity is required for records and saves. Shared devices need sign-out between users.
 
 Email, SMS and WhatsApp delivery are simulated. A provider integration needs verified sender details, protected credentials, recipient decisions, delivery events and failure handling. Simulated sends do not prove actual contact. AI drafts always require human review.
+
+## Volunteer and mentor profiles
+
+Under Manage workspace → Volunteers & mentors, add or edit a person’s description, spoken languages and registered programs. Select all programs they support. Description and program registrations are optional so existing records can be completed without inventing details. Existing archived registrations can be retained or removed; new registrations use active programs. These profile fields do not create or change mentor-to-child matches, volunteer hours or staff sign-in permissions.
+
+Migration 0008_volunteer_profiles.sql adds empty description and program-registration fields while preserving existing records. Local development applies it to existing local workspaces automatically; apply the migration before deploying the updated Worker to an existing D1 database.
