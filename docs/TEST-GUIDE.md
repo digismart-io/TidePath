@@ -52,7 +52,7 @@ Hosted fictional demo: `npm run demo:reset:remote -- --confirm=tidepath-demo`. I
 
 ## Submission language
 
-“This prototype connects a fictional quarter of program activity from registration to attendance, owned follow-ups, volunteer contributions and traceable reports. It demonstrates a pathway to reduce reconciliation and missed contact; time savings have not been measured. Spreadsheet import and reconciliation are planned next. Counseling, fundraising and financial systems remain separate.”
+“This prototype connects a fictional quarter of program activity from registration to attendance, owned follow-ups, volunteer contributions and traceable reports. It demonstrates a pathway to reduce reconciliation and missed contact; time savings have not been measured. CSV signups can be previewed and linked to confirmed identities; direct spreadsheet synchronization is future work. Counseling, fundraising and financial systems remain separate.”
 
 Do not claim live spreadsheet synchronization, real outbound messaging, clinical outcomes, autonomous multi-agent execution, complete localization, full offline operation, or production readiness.
 
@@ -67,3 +67,23 @@ Automated checks cover sibling linkage, independent enrollments, age validation,
 ## Attendance submission
 
 Teachers and assigned session leaders mark each student and click **Submit attendance** once. The same action saves attendance, checks follow-up rules and updates report totals. There is no Save draft action and no manager review or approval. Incomplete submissions are rejected without saving changes; existing unsubmitted session records remain excluded from reports until completed. Submitted attendance can be corrected and resubmitted, with audit history and concurrency protection.
+
+## Explainable and manual follow-ups
+
+Open **Participants → a child → Why a follow-up?** Each program shows its consecutive absence count, latest submitted sessions, attendance still unsubmitted and existing concern. Optional events explicitly have no automatic absence trigger. The explanation uses the same consecutive-absence calculation as the automation. **Create a follow-up** is available here and on the Follow-ups page: choose the child/program, reason, staff owner, due date and next action. One open task per child/program is enforced. Manual concerns do not require two absences. Only managers can use these actions.
+
+## Outcome entry
+
+Open **Participants → a child → Record assessment**, or use the Reports button. Select the enrolled mentoring/workshop program, start/end phase, reported 1–5 score and quarter date. Use the program's actual question/scale; these are voluntary non-clinical self-assessments. An end requires a start and cannot precede it. Existing values require explicit correction confirmation; audit entries preserve previous values. Reports recalculate pairs, missing ends and descriptive score changes immediately.
+
+For a fresh local demo, Amelia Thompson has a Harbor start assessment and no end. Record a genuine demo end response to increase paired assessments by one and reduce missing ends by one. No clinical screening or counseling intake is added.
+
+## CSV signup import and identity review
+
+Open **Participants → Import CSV**. Download the template or fictional messy example. Export signup data from a spreadsheet to CSV using the documented columns. Each source row has a stable `source_system` and `source_id`. Batches contain 1–20 rows and at most 20 KB.
+
+The example contains Rosa Rivera, R. Rivera (alternate email), and “Rivera, Rosa”, all registering Sofia. Preview shows possible matches and their evidence; it selects none automatically. For row 1 confirm existing **Rosa Rivera → Sofia Rivera**. For rows 2 and 3 choose the guardian and child confirmed for row 1, or explicitly select the same canonical identities. Check the review confirmation and import. Expected: three source mappings, zero new households/children, and at most one new enrollment (zero in the initial seed because Sofia already attends the event). Names, preferred language, age, contact details and historical attendance remain unchanged. Reimporting the identical file skips all three rows. Changed contents under a reused source ID are blocked for review.
+
+For new siblings, choose a new guardian/household on the first row, then reuse that row's guardian and create a new child on each sibling row. Managers can choose an existing confirmed guardian even when no automatic suggestion exists. Identity decisions are audited. Invalid ages, groups, incompatible identity links, conflicting program enrollment, capacity failures or database errors roll back the whole batch.
+
+CSV import covers signup and program enrollment only. It does not fetch Google Sheets, import historical attendance, overwrite canonical profiles, or collapse two existing database profiles. Imported alternate spellings/contact values are not promoted to canonical fields. Language is the stated CSV value for new profiles and remains unchanged for existing profiles.

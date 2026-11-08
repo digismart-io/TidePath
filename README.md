@@ -49,6 +49,8 @@ Family registration collects guardian details once and saves up to ten children 
 - Phone-friendly attendance with one Submit attendance action. Complete submissions immediately update follow-ups and reporting; no review or approval step. Corrections keep an audit history and concurrent changes are checked.
 - Two consecutive unexplained absences trigger one assigned follow-up. Message attempts, replies, ownership, next steps and resolution are separate events. Return to attendance does not silently resolve a concern.
 - Mentor matches retain history when reassigned; volunteer hours require approval and cannot duplicate a volunteer/session pair.
+- Participant details explain the automatic follow-up rule, latest submitted attendance, unsubmitted dates and existing tasks; managers can create manual concerns with ownership and due dates.
+- Managers can enter voluntary 1–5 start/end self-assessments for enrolled mentoring/workshop participants. Corrections require confirmation, preserve audit history and update report calculations.
 - Quarterly totals with source-record drill-down, downloadable JSON evidence, a printable view and reviewed narrative drafting.
 - PWA manifest and an offline application shell. Offline **attendance synchronization is not implemented**; API records are never cached by the service worker.
 
@@ -95,7 +97,7 @@ When AI is unavailable or unconfigured, a deterministic template is shown and ex
 
 ## Deferred scope and production work
 
-Spreadsheet import and duplicate reconciliation are stretch work, deliberately deferred until the core demo is stable. Seeded records are not represented as imported legacy data. Existing systems remain the owners of clinical, donor and financial records. See [the source brief and boundaries](docs/PROJECT-BRIEF.md).
+Manager-reviewed CSV signup import is implemented: preview up to 20 rows, inspect possible identity matches, explicitly choose existing/new guardians and children, and import atomically. Stable source IDs make identical reimports safe. This links imported variants to confirmed identities; it does not destructively merge already-existing database profiles or directly synchronize Google Sheets. Seeded records remain labeled as synthetic fixtures. Existing systems remain the owners of clinical, donor and financial records. See [the source brief and boundaries](docs/PROJECT-BRIEF.md).
 
 Before a real-data pilot: replace demo accounts with organizational identity and provisioning; agree on data retention and staff access; review translations with speakers; formalize enrollment/waitlist rules and concurrent capacity enforcement; add reliable scheduled escalation and delivery integrations if needed. The current follow-up queue identifies overdue tasks; it does not run an external notification scheduler. Quarter reports reflect live data; immutable issued-report snapshots are future work.
 

@@ -70,3 +70,78 @@ test('only a manager can link all siblings to an existing confirmed guardian, wi
  assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM audit_log WHERE action='registration'").get().n,2);
  assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM student_guardians WHERE guardian_id='guardian-001'").get().n,4);
 });
+
+test('participant explanation matches the automatic per-program rule and identifies unsubmitted attendance',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env),zoe=sqlite.prepare("SELECT id FROM students WHERE first_name='Zoe' AND last_name='Johnson'").get();
+ sqlite.prepare("UPDATE attendance SET status='absent' WHERE student_id=? AND session_id='wave-riverside-11'").run(zoe.id);
+ const detail=(await call(env,'/students/'+zoe.id,{cookie})).data;
+ const wave=detail.followup_explanation.find(p=>p.program_id==='nextwave');assert.equal(wave.count,1);assert.match(wave.reason,/two are needed/);assert.ok(wave.unsubmitted_dates.includes('2026-09-24'));
+ assert.equal(detail.followup_explanation.find(p=>p.program_id==='harbor').count,0);
+});
+test('a manager can create an owned manual concern without waiting for an absence trigger',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env),data={student_id:'student-001',program_id:'harbor',reason:'Family asked for a program check-in',next_action:'Call the guardian about attending next week',due_date:'2026-09-25',owner_id:'marisol'};
+ const result=await call(env,'/followups',{method:'POST',cookie,data});assert.equal(result.status,201,JSON.stringify(result.data));
+ const task=sqlite.prepare('SELECT * FROM followups WHERE id=?').get(result.data.id);assert.equal(task.status,'open');assert.equal(task.owner_id,'marisol');assert.match(task.reason,/Staff concern/);
+ assert.equal((await call(env,'/followups',{method:'POST',cookie,data})).status,409);assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM audit_log WHERE action='manual_followup'").get().n,1);
+ assert.equal((await call(env,'/followups',{method:'POST',cookie,data:{...data,student_id:'student-002',due_date:'invalid'}})).status,400);
+});
+test('new outcome entry completes a real assessment pair and corrections require current values and confirmation',async t=>{
+ const {env,DB,sqlite}=setup(t),cookie=await login(env),start=sqlite.prepare("SELECT a.* FROM assessments a WHERE a.phase='start' AND NOT EXISTS(SELECT 1 FROM assessments e WHERE e.student_id=a.student_id AND e.program_id=a.program_id AND e.phase='end') LIMIT 1").get(),before=await report(DB);
+ const data={student_id:start.student_id,program_id:start.program_id,phase:'end',score:4,recorded_at:'2026-09-24',expected:''};
+ assert.equal((await call(env,'/assessments',{method:'POST',cookie,data})).status,201);
+ const after=await report(DB);assert.equal(after.totals.assessment_pairs,before.totals.assessment_pairs+1);assert.equal(after.totals.assessment_missing_end,before.totals.assessment_missing_end-1);
+ assert.equal((await call(env,'/assessments',{method:'POST',cookie,data:{...data,score:5}})).status,409);
+ const correction={...data,score:5,expected:JSON.stringify([4,'2026-09-24']),replace:true};assert.equal((await call(env,'/assessments',{method:'POST',cookie,data:{...correction,replace:false}})).status,409);assert.equal((await call(env,'/assessments',{method:'POST',cookie,data:correction})).status,200);
+ assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM audit_log WHERE action='assessment_saved'").get().n,2);
+});
+test('assessment entry validates enrollment, scale, baseline and chronology without clinical intake',async t=>{
+ const {env}=setup(t),cookie=await login(env),base={student_id:'student-001',program_id:'harbor',phase:'end',score:4,recorded_at:'2026-09-24',expected:''};
+ for(const data of [{...base,score:6},{...base,score:''},{...base,recorded_at:'2026-10-01'},{...base,program_id:'compass'},{...base,program_id:'together'},{...base,recorded_at:'2026-07-01'}])assert.equal((await call(env,'/assessments',{method:'POST',cookie,data})).status,400);
+});
+const intakeHeaders='source_system,source_id,guardian_name,email,language,neighborhood,first_name,last_name,age,group_id,phone';
+const intakeCSV=rows=>intakeHeaders+'\n'+rows.join('\n');
+const intakeNew=intakeCSV(['test-sheet,row-1,New Demo Guardian,new-import@example.com,English,Little Havana,New,Child,7,together-havana,','test-sheet,row-2,N. Guardian,alternate@example.com,English,Little Havana,Second,Child,8,together-havana,']);
+test('CSV preview is read-only and proposes evidence without automatically merging different identities',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env),csv=intakeCSV(['legacy,row-1,R. Rivera,family1@example.com,Spanish,Little Havana,Sofia,Rivera,12,together-havana,305-555-0100']);
+ const preview=await call(env,'/import/preview',{method:'POST',cookie,data:{csv}});assert.equal(preview.status,200,JSON.stringify(preview.data));assert.ok(preview.data.rows[0].candidates.some(c=>c.guardian_id==='guardian-001'&&c.signals.includes('same email')));
+ assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM students').get().n,100);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM import_records').get().n,0);
+ assert.equal((await call(env,'/import/commit',{method:'POST',cookie,data:{csv,decisions:[{}]}})).status,400);
+});
+test('CSV can link sibling rows to one confirmed new guardian and reimport is idempotent',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env),data={csv:intakeNew,decisions:[{guardian:'new',child:'new'},{guardian:'row:0',child:'new'}]};
+ const result=await call(env,'/import/commit',{method:'POST',cookie,data});assert.equal(result.status,201,JSON.stringify(result.data));assert.equal(result.data.new_households,1);assert.equal(result.data.new_children,2);
+ const identities=sqlite.prepare('SELECT guardian_id FROM import_records').all();assert.equal(identities[0].guardian_id,identities[1].guardian_id);
+ const repeat=await call(env,'/import/commit',{method:'POST',cookie,data});assert.equal(repeat.data.skipped,2);assert.equal(repeat.data.new_children,0);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM students').get().n,102);
+ assert.equal((await call(env,'/import/preview',{method:'POST',cookie,data:{csv:intakeNew.replace('New,Child','Changed,Child')}})).status,409);
+});
+test('three spelling/email variants can be confirmed as one existing family without overwriting canonical identity',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env),csv=readFileSync(new URL('../public/samples/tidepath-messy-signups.csv',import.meta.url),'utf8'),before=sqlite.prepare("SELECT * FROM guardians WHERE id='guardian-001'").get(),child=sqlite.prepare("SELECT id FROM students WHERE first_name='Sofia' AND last_name='Rivera'").get();
+ const decisions=[{guardian:'guardian-001',child:child.id},{guardian:'row:0',child:'row:0'},{guardian:'guardian-001',child:child.id}];
+ const result=await call(env,'/import/commit',{method:'POST',cookie,data:{csv,decisions}});assert.equal(result.status,201,JSON.stringify(result.data));assert.equal(result.data.new_children,0);assert.equal(result.data.new_households,0);assert.ok(result.data.new_enrollments<=1);
+ assert.deepEqual(sqlite.prepare("SELECT * FROM guardians WHERE id='guardian-001'").get(),before);assert.equal(sqlite.prepare('SELECT COUNT(DISTINCT student_id) n FROM import_records').get().n,1);
+});
+test('CSV import rejects mismatched identities and capacity errors without partial records',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env),data={csv:intakeNew,decisions:[{guardian:'guardian-001',child:'student-099'},{guardian:'new',child:'new'}]};
+ assert.equal((await call(env,'/import/commit',{method:'POST',cookie,data})).status,400);
+ sqlite.prepare("UPDATE groups SET capacity=0 WHERE id='together-havana'").run();data.decisions=[{guardian:'new',child:'new'},{guardian:'row:0',child:'new'}];assert.equal((await call(env,'/import/commit',{method:'POST',cookie,data})).status,409);
+ assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM students').get().n,100);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM households').get().n,70);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM import_records').get().n,0);
+});
+test('CSV parser handles quoted names, rejects ambiguous source IDs and unsupported fields',async t=>{
+ const {env}=setup(t),cookie=await login(env),quoted=intakeCSV(['parser,one,"Guardian, Demo",demo@example.com,English,Little Havana,Demo,Child,7,together-havana,']);
+ const preview=await call(env,'/import/preview',{method:'POST',cookie,data:{csv:quoted}});assert.equal(preview.status,200);assert.equal(preview.data.rows[0].guardian_name,'Guardian, Demo');
+ for(const csv of [quoted+'\n'+quoted.split('\n')[1],quoted.replace('English','French'),quoted.replace('"Guardian, Demo"','"Broken quote'),quoted.replace(',age,',',diagnosis,')])assert.equal((await call(env,'/import/preview',{method:'POST',cookie,data:{csv}})).status,400);
+});
+test('manual follow-ups, assessment entry and CSV import require manager access',async t=>{
+ const {env}=setup(t),teacher=await login(env,'elena');for(const path of ['/followups','/assessments','/import/preview','/import/commit']){assert.equal((await call(env,path,{method:'POST',data:{}})).status,401);assert.equal((await call(env,path,{method:'POST',cookie:teacher,data:{}})).status,403);}
+});
+test('CSV database failure rolls back identities, enrollment, source tracking and audit together',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env);sqlite.exec("CREATE TRIGGER fail_import BEFORE INSERT ON import_records WHEN NEW.source_id='row-2' BEGIN SELECT RAISE(ABORT,'test rollback'); END;");
+ assert.equal((await call(env,'/import/commit',{method:'POST',cookie,data:{csv:intakeNew,decisions:[{guardian:'new',child:'new'},{guardian:'row:0',child:'new'}]}})).status,500);
+ assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM students').get().n,100);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM households').get().n,70);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM import_records').get().n,0);assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM audit_log WHERE action='csv_identity_confirmed'").get().n,0);
+});
+test('a full 20-row CSV batch uses bulk writes and stays below the D1 free-tier query budget',async t=>{
+ const {env,sqlite,DB}=setup(t),cookie=await login(env);sqlite.prepare("UPDATE groups SET capacity=100 WHERE id='together-havana'").run();let queries=0;
+ const tracked={...DB,prepare(sql){queries++;return DB.prepare(sql);},batch(statements){return DB.batch(statements);}};env.DB=tracked;
+ const csv=intakeCSV(Array.from({length:20},(_,i)=>`bulk,${i},Guardian ${i},bulk${i}@example.com,English,Little Havana,Child${i},Demo,7,together-havana,`));
+ const result=await call(env,'/import/commit',{method:'POST',cookie,data:{csv,decisions:Array.from({length:20},()=>({guardian:'new',child:'new'}))}});assert.equal(result.status,201,JSON.stringify(result.data));assert.equal(result.data.new_children,20);assert.ok(queries<50,`used ${queries} prepared statements`);
+});

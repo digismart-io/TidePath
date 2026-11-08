@@ -1,3 +1,4 @@
+import { previewIntake, commitIntake } from './imports.js';
 const encoder = new TextEncoder();
 const uid = () => crypto.randomUUID();
 const now = () => new Date().toISOString();
@@ -43,6 +44,17 @@ async function sessionAccess(db,user,id) {
   return session;
 }
 function nextWorkingDay(day){const d=new Date(day+'T12:00:00Z');do{d.setUTCDate(d.getUTCDate()+1);}while([0,6].includes(d.getUTCDay()));return d.toISOString().slice(0,10);}
+function consecutiveAbsences(history){let count=0;for(const row of history){if(row.status!=='absent')break;count++;}return count;}
+async function followupExplanation(db,studentId){
+ const [programs,records,pending,tasks]=await Promise.all([
+ all(db,'SELECT DISTINCT p.* FROM programs p JOIN groups g ON g.program_id=p.id JOIN enrollments e ON e.group_id=g.id WHERE e.student_id=?',studentId),
+ all(db,"SELECT a.status,s.date,g.program_id,g.name group_name FROM attendance a JOIN sessions s ON s.id=a.session_id JOIN groups g ON g.id=s.group_id WHERE a.student_id=? AND s.status='submitted' ORDER BY s.date DESC,s.id DESC",studentId),
+ all(db,"SELECT s.date,g.program_id FROM attendance a JOIN sessions s ON s.id=a.session_id JOIN groups g ON g.id=s.group_id WHERE a.student_id=? AND s.status='draft' ORDER BY s.date DESC",studentId),
+ all(db,'SELECT id,program_id,status,created_at FROM followups WHERE student_id=?',studentId)]);
+ return programs.map(p=>{const history=records.filter(r=>r.program_id===p.id),count=consecutiveAbsences(history),optional=JSON.parse(p.details).attendance_rule!=='consecutive_absences',active=tasks.find(t=>t.program_id===p.id&&t.status!=='resolved'),handled=history.length&&tasks.some(t=>t.program_id===p.id&&t.status==='resolved'&&t.created_at.slice(0,10)>=history[0].date);
+ const reason=active?'An open follow-up already exists for this program.':optional?'Optional events do not trigger automatic absence follow-ups.':!history.length?'No submitted attendance yet.':count>=2?(handled?'This absence sequence already has a resolved follow-up.':'Two or more consecutive unexplained absences meet the automatic rule.'):`${count} consecutive unexplained ${count===1?'absence':'absences'}; two are needed in this program.`;
+ return {program_id:p.id,program_name:p.name,count,reason,active_task_id:active?.id||null,latest:history.slice(0,3),unsubmitted_dates:pending.filter(r=>r.program_id===p.id).map(r=>r.date),automatic_rule:!optional};});
+}
 export async function reconcileFollowups(db,studentId,programId) {
   return reconcileProgramFollowups(db,[studentId],programId);
 }
@@ -57,8 +69,7 @@ async function reconcileProgramFollowups(db,studentIds,programId) {
   ]);
   const concerns=[];
   for(const studentId of studentIds){
-    const history=records.filter(r=>r.student_id===studentId);let count=0;
-    for(const r of history){if(r.status!=='absent')break;count++;}
+    const history=records.filter(r=>r.student_id===studentId),count=consecutiveAbsences(history);
     if(count<2)continue;
     const latest=history[0].date;
     if(tasks.some(t=>t.student_id===studentId&&(t.status!=='resolved'||t.created_at.slice(0,10)>=latest)))continue;
@@ -195,6 +206,34 @@ async function api(request,env,url){
     }
   }
   requireManager(user);
+  if(path==='/api/followups'&&method==='POST'){
+    const data=await body(request),config=await settings(db);
+    if(!await first(db,'SELECT 1 FROM enrollments e JOIN groups g ON g.id=e.group_id WHERE e.student_id=? AND g.program_id=?',data.student_id,data.program_id))fail(400,'Choose a participant and one of their programs.');
+    const owner=optional(data.owner_id,100)||user.id;if(!await first(db,'SELECT id FROM staff WHERE id=?',owner))fail(400,'Choose a staff owner.');
+    if(!isDay(data.due_date))fail(400,'Enter a valid due date.');
+    if(await first(db,"SELECT id FROM followups WHERE student_id=? AND program_id=? AND status!='resolved'",data.student_id,data.program_id))fail(409,'An open follow-up already exists for this child and program. Add a note to that follow-up.');
+    const reason='Staff concern: '+text(data.reason,'Reason for the check-in',1000),next=text(data.next_action,'Next action',1000),id=uid(),stamp=now();
+    try{await db.batch([db.prepare("INSERT INTO followups (id,student_id,program_id,reason,owner_id,due_date,status,next_action,created_at) VALUES (?,?,?,?,?,?,'open',?,?)").bind(id,data.student_id,data.program_id,reason,owner,data.due_date,next,stamp),db.prepare('INSERT INTO audit_log VALUES (?,?,?,?,?,?)').bind(uid(),user.id,'manual_followup',id,JSON.stringify({reason,owner,due_date:data.due_date}),stamp)]);}catch(e){if(/UNIQUE/i.test(e.message))fail(409,'An open follow-up was just created. Refresh and use the existing task.');throw e;}
+    return json({ok:true,id},201);
+  }
+  if(path==='/api/assessments'&&method==='POST'){
+    const data=await body(request),config=await settings(db),score=Number(data.score);
+    if(!['start','end'].includes(data.phase)||String(data.score??'').trim()===''||!Number.isInteger(score)||score<1||score>5)fail(400,'Choose start/end and a whole-number score from 1 to 5.');
+    if(!isDay(data.recorded_at)||data.recorded_at<config.quarter_start||data.recorded_at>config.quarter_end)fail(400,'Choose a date within this reporting quarter.');
+    const program=await first(db,'SELECT p.* FROM programs p JOIN groups g ON g.program_id=p.id JOIN enrollments e ON e.group_id=g.id WHERE e.student_id=? AND p.id=?',data.student_id,data.program_id);
+    if(!program||JSON.parse(program.details).attendance_rule!=='consecutive_absences')fail(400,'Choose an enrolled mentoring or workshop program. Counseling records stay outside this app.');
+    const records=await all(db,'SELECT * FROM assessments WHERE student_id=? AND program_id=?',data.student_id,data.program_id),old=records.find(r=>r.phase===data.phase),other=records.find(r=>r.phase!==data.phase);
+    if(data.phase==='end'&&!other)fail(400,'Record the start assessment before adding an end assessment.');
+    if(other&&((data.phase==='end'&&data.recorded_at<other.recorded_at)||(data.phase==='start'&&data.recorded_at>other.recorded_at)))fail(400,'The end assessment must be on or after the start assessment.');
+    const expected=old?JSON.stringify([old.score,old.recorded_at]):'';
+    if(data.expected!==expected)fail(409,'This assessment changed. Reopen the form before saving.');
+    if(old&&data.replace!==true)fail(409,'Confirm that you want to correct the existing assessment.');
+    const write=old?db.prepare('UPDATE assessments SET score=?,recorded_at=? WHERE student_id=? AND program_id=? AND phase=? AND score=? AND recorded_at=?').bind(score,data.recorded_at,data.student_id,data.program_id,data.phase,old.score,old.recorded_at):db.prepare('INSERT OR IGNORE INTO assessments VALUES (?,?,?,?,?)').bind(data.student_id,data.program_id,data.phase,score,data.recorded_at);
+    const changeId=uid();const results=await db.batch([write,db.prepare('INSERT INTO audit_log SELECT ?,?,?,?,?,? WHERE changes()>0').bind(changeId,user.id,'assessment_saved',data.student_id,JSON.stringify({program_id:data.program_id,phase:data.phase,before:old||null,score,recorded_at:data.recorded_at}),now())]);
+    if(!results[0].meta.changes)fail(409,'This assessment changed while saving. Reopen the form.');return json({ok:true},old?200:201);
+  }
+  if(path==='/api/import/preview'&&method==='POST'){const data=await body(request);return json(await previewIntake(db,data.csv));}
+  if(path==='/api/import/commit'&&method==='POST')return json(await commitIntake(db,user,await body(request)),201);
   if(path==='/api/report'&&method==='GET')return json(await report(db));
   if(path==='/api/report/draft'&&method==='POST'){
     const rep=await report(db),t=rep.totals;
@@ -211,7 +250,7 @@ async function api(request,env,url){
   const studentMatch=path.match(/^\/api\/students\/([^/]+)$/);
   if(studentMatch&&method==='GET'){
     const student=await first(db,'SELECT * FROM students WHERE id=?',studentMatch[1]);if(!student)fail(404,'Student not found.');
-    return json({student,guardians:await all(db,'SELECT g.* FROM guardians g JOIN student_guardians sg ON sg.guardian_id=g.id WHERE sg.student_id=?',student.id),attendance:await all(db,'SELECT a.*,s.date,s.status session_status,g.name group_name,g.school FROM attendance a JOIN sessions s ON s.id=a.session_id JOIN groups g ON g.id=s.group_id WHERE student_id=? ORDER BY s.date DESC',student.id),assessments:await all(db,'SELECT a.*,p.name program_name FROM assessments a JOIN programs p ON p.id=a.program_id WHERE student_id=?',student.id)});
+    return json({student,followup_explanation:await followupExplanation(db,student.id),guardians:await all(db,'SELECT g.* FROM guardians g JOIN student_guardians sg ON sg.guardian_id=g.id WHERE sg.student_id=?',student.id),attendance:await all(db,'SELECT a.*,s.date,s.status session_status,g.name group_name,g.school FROM attendance a JOIN sessions s ON s.id=a.session_id JOIN groups g ON g.id=s.group_id WHERE student_id=? ORDER BY s.date DESC',student.id),assessments:await all(db,'SELECT a.*,p.name program_name FROM assessments a JOIN programs p ON p.id=a.program_id WHERE student_id=?',student.id)});
   }
   const followMatch=path.match(/^\/api\/followups\/([^/]+)(?:\/(draft|events))?$/);
   if(followMatch){

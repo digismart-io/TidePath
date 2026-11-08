@@ -34,7 +34,7 @@ Households are separate from guardians. Contact language is explicit. The staff 
 - QuickBooks remains the financial ledger. The donor CRM, donation and ticketing tools retain fundraising records. No payments or grant accounting are implemented here.
 - The report provides program evidence for funders; grant-specific templates, financial schedules, demographic eligibility rules and funding allocations require separately agreed definitions.
 - No real emails, WhatsApp messages or SMS messages are sent. Contact events labeled simulated are demonstration events.
-- Spreadsheet import, identity reconciliation, external-tool synchronization, offline attendance synchronization, and organization-wide role provisioning are future work.
+- CSV signup import with human-confirmed identity links is implemented. Direct Google Sheets synchronization, destructive merging of existing profiles, historical attendance imports, offline attendance synchronization, and organization-wide role provisioning remain future work.
 - Synthetic records are seeded directly so the app can be reset and tested repeatedly. A functional seed is not presented as a completed import integration.
 
 ## Demonstration clock

@@ -283,3 +283,10 @@ dialog{border:0;border-radius:var(--radius-md)}
 .registration-child .btn{margin-top:12px}
 .counseling-note{margin-top:24px;max-width:65ch}
 @media(max-width:480px){.registration-child{padding:14px 12px}}
+
+.explanation-list article,.import-row{border-bottom:1px solid var(--color-rule);padding:20px 0;margin-bottom:16px}
+.explanation-list article p,.import-row p{margin:8px 0;overflow-wrap:anywhere}
+.explanation-list{margin:12px 0 20px}
+#import-preview{margin-top:24px}
+#import-preview .import-row select{max-width:100%}
+[data-page="import"] code{overflow-wrap:anywhere;white-space:normal}

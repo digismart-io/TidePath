@@ -1,0 +1,4 @@
+source_system,source_id,guardian_name,email,language,neighborhood,first_name,last_name,age,group_id,phone
+legacy-sheet,example-rosa-1,Rosa Rivera,family1@example.com,Spanish,Little Havana,Sofia,Rivera,12,together-havana,305-555-0100
+legacy-sheet,example-rosa-2,R. Rivera,rosa.alternate@example.com,Spanish,Little Havana,Sofia,Rivera,12,together-havana,305-555-0100
+legacy-sheet,example-rosa-3,"Rivera, Rosa",family1@example.com,Spanish,Little Havana,Sofia,Rivera,12,together-havana,305-555-0100
