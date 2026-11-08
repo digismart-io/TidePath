@@ -1,5 +1,7 @@
 # TidePath
 
+![Young people together — the TidePath website hero](docs/assets/hero.jpg)
+
 **Record once. Know who needs a call. Explain every number.**
 
 TidePath is a program management app demonstrated with **Tidepath Family Alliance, a fictional youth nonprofit**. It connects family registration, attendance, mentors, volunteer hours, family follow-ups and quarterly reporting in one workspace. All demonstration records are made up.
