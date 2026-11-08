@@ -501,7 +501,7 @@ body:has(.tp){margin:0}
     <p class="tp-error" id="tp-error" role="alert" hidden></p>
     <button type="submit" class="tp-btn tp-btn-main tp-submit">Continue to family registration <svg class="tp-ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
     <p class="tp-hint">You’ll add all children in one family registration in the app. This page saves no registration. All programs and records are fictional demonstrations.</p>
-    <a class="tp-btn tp-btn-ghost" href="https://tidepath-demo.go-610.workers.dev/">Open staff workspace</a>
+    <a class="tp-btn tp-btn-ghost" data-app-link href="#tp-register">Open staff workspace</a>
   </form>
 
 
@@ -546,7 +546,7 @@ body:has(.tp){margin:0}
     <div class="tp-foot-contact">
       <b>Contact</b>
       <span>Fictional organization · demonstration</span>
-      <a href="https://tidepath-demo.go-610.workers.dev/">Open the TidePath app</a>
+      <a data-app-link href="#tp-register">Open the TidePath app</a>
       <span>Miami-Dade · Little Havana · West Little River</span>
     </div>
     <p class="tp-demo">TidePath Family Alliance is a fictional organization (demo). Program locations named on this page are fictional.</p>
@@ -556,10 +556,11 @@ body:has(.tp){margin:0}
 
 
 </div>
+<script src="site-config.js"></script>
 <script>
 (function(){
  const root=document.querySelector('.tp'),form=document.querySelector('#tp-form'),select=document.querySelector('#tp-program'),card=document.querySelector('#tp-register');
- const appURL='https://tidepath-demo.go-610.workers.dev/';let catalog=null;
+ const appURL=new URL(window.TIDEPATH_SITE.appURL).href.replace(/\/?$/,'/');let catalog=null;root.querySelectorAll('[data-app-link]').forEach(link=>link.href=appURL);
  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const pictures={harbor:'program-harbor.jpg',compass:'program-compass.jpg',nextwave:'program-nextwave.jpg',brightminds:'program-bright.jpg',together:'band.jpg'};
  function update(){const p=catalog?.programs.find(p=>p.id===select.value),d=p?JSON.parse(p.details):{},groups=catalog?.groups.filter(g=>g.program_id===p?.id)||[],privateIntake=d.enrollment_mode==='secure_system';

@@ -28,7 +28,7 @@ function equal(a,b) { if(a.length!==b.length)return false;let different=0;for(le
 async function actor(request,db) {
   const token=request.headers.get('cookie')?.match(/(?:^|;\s*)tp_session=([^;]+)/)?.[1];
   if(!token)return null;
-  return first(db,'SELECT s.id,s.name,s.email,s.role FROM auth_sessions a JOIN staff s ON s.id=a.staff_id WHERE a.token_hash=? AND a.expires_at>? AND s.active=1',await digest(token),now());
+  return first(db,"SELECT s.id,s.name,s.email,s.role FROM auth_sessions a JOIN staff s ON s.id=a.staff_id WHERE a.token_hash=? AND a.expires_at>? AND s.active=1 AND s.role IN ('manager','teacher')",await digest(token),now());
 }
 async function throttle(db,key,limit) {
   const start=Math.floor(Date.now()/600000);
@@ -38,7 +38,7 @@ async function throttle(db,key,limit) {
 }
 async function settings(db){return Object.fromEntries((await all(db,'SELECT * FROM settings')).map(r=>[r.key,r.value]));}
 async function audit(db,user,action,entity,detail){await run(db,'INSERT INTO audit_log VALUES (?,?,?,?,?,?)',uid(),user.id,action,entity,JSON.stringify(detail),now());}
-function requireManager(user){if(user.role!=='manager')fail(403,'This action is available to Marisol and program managers.');}
+function requireManager(user){if(user.role!=='manager')fail(403,'This action is available to program managers.');}
 async function sessionAccess(db,user,id) {
   const session=await first(db,'SELECT s.*,g.name group_name,g.school,g.program_id,g.time FROM sessions s JOIN groups g ON g.id=s.group_id WHERE s.id=?',id);
   if(!session)fail(404,'Session not found.');
@@ -128,7 +128,7 @@ async function api(request,env,url){
     await throttle(db,await digest(`login:${request.headers.get('CF-Connecting-IP')||'local'}:${email}`),15);
     const user=await first(db,'SELECT * FROM staff WHERE email=?',email);
     const hash=await passwordHash(password,user?.password_salt||'unknown-account');
-    if(!user||!user.active||!equal(hash,user.password_hash))fail(401,'Email or password is incorrect.');
+    if(!user||!user.active||!['manager','teacher'].includes(user.role)||!equal(hash,user.password_hash))fail(401,'Email or password is incorrect.');
     const token=uid()+uid();await run(db,'INSERT INTO auth_sessions VALUES (?,?,?)',await digest(token),user.id,new Date(Date.now()+8*3600000).toISOString());
     await run(db,'DELETE FROM auth_sessions WHERE expires_at<?',now());
     return json({ok:true},200,{'Set-Cookie':`tp_session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${url.protocol==='https:'?'; Secure':''}`});
@@ -184,6 +184,7 @@ async function api(request,env,url){
     const sessions=await all(db,`SELECT s.*,g.name group_name,g.school,g.program_id,g.time,(SELECT COUNT(*) FROM attendance a WHERE a.session_id=s.id) roster_count,(SELECT COUNT(*) FROM attendance a WHERE a.session_id=s.id AND a.status IS NULL) unmarked,(SELECT COUNT(*) FROM attendance a WHERE a.session_id=s.id AND a.status IN ('present','late')) attended FROM sessions s JOIN groups g ON g.id=s.group_id ${user.role==='teacher'?'JOIN staff_groups sg ON sg.group_id=g.id WHERE sg.staff_id=?':''} ORDER BY s.date DESC`,...(user.role==='teacher'?[user.id]:[]));
     const common={user,config,groups,sessions,programs:await all(db,'SELECT * FROM programs'),demo:env.DEMO_MODE==='true',ai_available:Boolean(env.AI&&env.AI_MODEL),workspace:workspace(config)};
     if(user.role==='teacher')return json(common);
+    requireManager(user);
     const [students,guardians,links,enrollments,volunteers,matches,hours,followups,staff,rep]=await Promise.all([
       all(db,'SELECT * FROM students ORDER BY first_name'),all(db,'SELECT * FROM guardians ORDER BY name'),all(db,'SELECT * FROM student_guardians'),all(db,'SELECT e.*,g.program_id,g.name group_name,g.school FROM enrollments e JOIN groups g ON g.id=e.group_id'),all(db,'SELECT * FROM volunteers ORDER BY name'),
       all(db,'SELECT m.*,v.name volunteer_name FROM mentor_matches m JOIN volunteers v ON v.id=m.volunteer_id'),all(db,'SELECT h.*,v.name volunteer_name,s.date,g.name group_name FROM volunteer_hours h JOIN volunteers v ON v.id=h.volunteer_id JOIN sessions s ON s.id=h.session_id JOIN groups g ON g.id=s.group_id ORDER BY s.date DESC'),

@@ -4,7 +4,7 @@ Each deployment serves one nonprofit. Organization details are configurable; Tid
 
 ## Start with an empty local workspace
 
-Use Node 24+, run `npm ci`, then:
+Use Node 22.13+ (Node 24 recommended), run `npm ci`, then:
 
 ```sh
 npm run setup:workspace -- --local
