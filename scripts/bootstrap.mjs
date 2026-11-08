@@ -1,0 +1,25 @@
+import { mkdirSync, readFileSync, readdirSync, existsSync, mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { tmpdir } from 'node:os';
+import { randomUUID, pbkdf2Sync } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
+import { createInterface } from 'node:readline/promises';
+import { Writable } from 'node:stream';
+import { openDatabase } from './sqlite.mjs';
+const local=process.argv.includes('--local'),database=process.argv.find(v=>v.startsWith('--database='))?.slice(11);
+if(!local&&!database){console.error('Use --local for a new local workspace or --database=NAME for a migrated remote D1 database.');process.exit(1);}
+let mute=false;const output=new Writable({write(chunk,_encoding,done){if(!mute)process.stdout.write(chunk);done();}});
+let rl;async function value(key,prompt,secret=false,fallback=''){if(process.env[key])return process.env[key];if(!process.stdin.isTTY){if(fallback)return fallback;throw new Error(`${key} is required in non-interactive setup.`);}rl??=createInterface({input:process.stdin,output,terminal:true});if(secret){process.stdout.write(prompt);mute=true;}try{return (await rl.question(secret?'':prompt)).trim()||fallback;}finally{if(secret){mute=false;process.stdout.write('\n');}}}
+const q=v=>"'"+String(v).replaceAll("'","''")+"'";
+try{
+ const name=await value('TIDEPATH_ADMIN_NAME','First manager name: '),email=(await value('TIDEPATH_ADMIN_EMAIL','First manager email: ')).toLowerCase(),password=await value('TIDEPATH_ADMIN_PASSWORD','Initial password (12+ characters, hidden): ',true),organization=await value('TIDEPATH_ORGANIZATION','Organization name: '),areas=(await value('TIDEPATH_SERVICE_AREAS','Service areas (comma-separated): ')).split(',').map(v=>v.trim()).filter(Boolean);
+ if(!name||name.length>120||!organization||organization.length>120||!/^\S+@\S+\.\S+$/.test(email)||email.length>200||password.length<12||password.length>200||!areas.length||areas.length>20||areas.some(v=>v.length>80))throw new Error('Check names, email, service areas and the 12–200 character password.');
+ const current=new Date(),today=current.toISOString().slice(0,10),year=current.getUTCFullYear(),month=Math.floor(current.getUTCMonth()/3)*3;
+ const start=process.env.TIDEPATH_QUARTER_START||new Date(Date.UTC(year,month,1)).toISOString().slice(0,10),end=process.env.TIDEPATH_QUARTER_END||new Date(Date.UTC(year,month+3,0)).toISOString().slice(0,10),working=process.env.TIDEPATH_WORKING_DATE||today;
+ const isDay=v=>/^\d{4}-\d{2}-\d{2}$/.test(v)&&!Number.isNaN(Date.parse(v))&&new Date(v+'T12:00:00Z').toISOString().slice(0,10)===v;if(![start,end,working].every(isDay)||start>end||working<start||working>end)throw new Error('Choose a reporting period containing the working date.');
+ const salt=randomUUID(),hash=pbkdf2Sync(password,salt,100000,32,'sha256').toString('hex'),id=randomUUID(),settings={organization_name:organization,service_areas:JSON.stringify(areas),quarter_start:start,quarter_end:end,demo_today:working,admin_version:'0',admin_edit_token:''};
+ const sql=`INSERT INTO staff(id,name,email,role,password_hash,password_salt) VALUES (${[id,name,email,'manager',hash,salt].map(q).join(',')});\n`+Object.entries(settings).map(([k,v])=>`INSERT INTO settings(key,value) VALUES (${q(k)},${q(v)}) ON CONFLICT(key) DO UPDATE SET value=excluded.value;`).join('\n');
+ if(local){const path=resolve(process.env.TIDEPATH_DB_PATH||'.local/tidepath.sqlite');if(existsSync(path))throw new Error('Local database already exists. This setup does not overwrite existing workspaces.');mkdirSync(dirname(path),{recursive:true});const db=openDatabase(path);try{for(const file of readdirSync('migrations').filter(f=>f.endsWith('.sql')).sort())db.sqlite.exec(readFileSync(join('migrations',file),'utf8'));db.sqlite.exec('BEGIN');db.sqlite.exec(sql);db.sqlite.exec('COMMIT');}finally{db.close();}}
+ else{const npx=process.platform==='win32'?'npx.cmd':'npx',check=spawnSync(npx,['wrangler','d1','execute',database,'--remote','--command','SELECT COUNT(*) n FROM staff','--json'],{encoding:'utf8'});if(check.status!==0)throw new Error('Could not verify the migrated remote database. Check Wrangler login and apply migrations first.');let result;try{result=JSON.parse(check.stdout);}catch{throw new Error('Could not verify an empty staff table. Setup stopped without writing.');}if(result[0]?.results?.[0]?.n!==0)throw new Error('Staff already exist. Use an existing manager; setup will not overwrite the workspace.');const dir=mkdtempSync(join(tmpdir(),'tidepath-bootstrap-'));try{const file=join(dir,'bootstrap.sql');writeFileSync(file,sql,{mode:0o600});const saved=spawnSync(npx,['wrangler','d1','execute',database,'--remote','--file',file],{stdio:'inherit'});if(saved.status!==0)throw new Error('Remote initialization failed. Inspect the database before retrying.');}finally{rmSync(dir,{recursive:true,force:true});}}
+ console.log('Empty workspace initialized with one manager and no fictional families. Sign in with the credentials you supplied.');
+}catch(e){console.error(e.message);process.exitCode=1;}finally{rl?.close();}

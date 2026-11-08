@@ -6,7 +6,7 @@
 
 TidePath provides a working, connected program workspace: family signup becomes enrollment; session leaders submit attendance; missed sessions become owned follow-ups; mentors, volunteer contributions and reported outcomes feed traceable quarterly evidence.
 
-[Working app](https://tidepath-demo.go-610.workers.dev/) · [Public Programs website](https://digismart-io.github.io/TidePath/) · [Source and draft PR](https://github.com/digismart-io/TidePath/pull/1)
+[Working app](https://tidepath-demo.go-610.workers.dev/) · [Public Programs website](https://digismart-io.github.io/TidePath/) · [Complete source](https://github.com/digismart-io/TidePath)
 
 ## What is implemented
 
@@ -42,7 +42,7 @@ Cloudflare Workers AI hosts Meta Llama 3.3 70B Instruct. It drafts message wordi
 
 ## Validation and current limits
 
-The repository includes 52 passing integration tests for permissions, record linkage, attendance completeness and concurrency, follow-up behavior, assessments, CSV identity review, rollback, repeat imports and report calculations. Local browser rehearsals exercised successful writes without adding test data to the live deployment.
+The repository includes 63 passing automated tests for permissions, record linkage, attendance completeness and concurrency, follow-up behavior, assessments, CSV identity review, rollback, repeat imports and report calculations. Local browser rehearsals exercised successful writes without adding test data to the live deployment.
 
 The prototype demonstrates the workflow; it does not yet establish measured time savings or guarantee that every family receives timely contact. There is no live spreadsheet synchronization, real outbound messaging, offline attendance synchronization or historical attendance import. CSV review links new source rows to confirmed identities; it does not destructively merge existing profiles. Reports use the configured demo quarter.
 
@@ -51,3 +51,12 @@ All participant records, program designs, schools, contact histories and assessm
 ## Next steps after the hackathon
 
 Priorities for a real pilot are organizational sign-in and role provisioning; agreed enrollment, capacity and retention policies; translation review; approved outbound delivery integrations and escalation policies. Measure staff time and follow-up completion during a pilot before claiming operational improvements.
+
+## Demonstration assumptions
+
+The data is synthetic. The nonprofit provides access to a phone or tablet for session attendance, with connectivity at submission time. Staff confirm family identities, review AI wording and remain responsible for contacting families. Outbound email/SMS/WhatsApp delivery is simulated; adding a delivery provider is an integration step, not a feature claimed in this demo. See the README assumptions for the full operational context.
+
+
+## Configurable workspace and PWA
+
+Managers can maintain programs, groups, staff access, mentors and volunteers, schedule sessions, and configure organization details and reporting dates. A safe bootstrap creates an empty workspace with one manager instead of fictional records. The public Programs chooser uses the app’s active catalog. The app is installable as a PWA on phones, tablets and supported desktop browsers; offline support covers the shell, while records and submissions require connectivity. See [workspace guide](WORKSPACE.md).

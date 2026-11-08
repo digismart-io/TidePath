@@ -1,0 +1,12 @@
+ALTER TABLE programs ADD COLUMN active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0,1));
+ALTER TABLE programs ADD COLUMN version INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE groups ADD COLUMN active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0,1));
+ALTER TABLE groups ADD COLUMN version INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE volunteers ADD COLUMN active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0,1));
+ALTER TABLE volunteers ADD COLUMN version INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE staff ADD COLUMN active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0,1));
+ALTER TABLE staff ADD COLUMN version INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE staff ADD COLUMN edit_token TEXT NOT NULL DEFAULT '';
+ALTER TABLE mentor_matches ADD COLUMN program_id TEXT REFERENCES programs(id);
+UPDATE mentor_matches SET program_id='harbor' WHERE program_id IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS one_active_mentor_per_program ON mentor_matches(student_id,program_id) WHERE end_date IS NULL;

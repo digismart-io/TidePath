@@ -6,14 +6,14 @@ The repository contains app source, fictional seed records, public demo credenti
 
 The current `wrangler.jsonc` names the original demo Worker and D1 database. Its database ID is a resource identifier, not an access credential. Copying it does not authorize access. The public Programs page also contains links to the original live app, which must be changed for an independent deployment.
 
-Creating a Git branch does not deploy anything. GitHub Pages is currently configured to serve `/docs` from `codex/tidepath-demo`; a copied branch is not automatically published there.
+Creating a Git branch does not deploy anything. GitHub Pages is currently configured to serve `/docs` from `main`; a copied branch is not automatically published there.
 
 ## Start locally
 
-Check out the app branch and install its pinned dependencies:
+Check out the repository and install its pinned dependencies:
 
 ```sh
-git clone --branch codex/tidepath-demo https://github.com/digismart-io/TidePath.git
+git clone https://github.com/digismart-io/TidePath.git
 cd TidePath
 npm ci
 npm run db:reset
@@ -79,7 +79,7 @@ The static website is `docs/index.html`, with relative image paths under `docs/a
 3. Wait for the Pages build to complete, then open the returned URL.
 4. Choose a program and language, continue to family registration, and confirm the app opens with those choices. No family contact details are collected on the static page.
 
-The original site currently publishes `/docs` from `codex/tidepath-demo`. If that branch is merged into `main` and removed later, change the Pages source to `main` before deleting it. [GitHub Pages publishing sources](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)
+The original site currently publishes `/docs` from `main`. Keep the Pages source aligned with the branch you publish. [GitHub Pages publishing sources](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)
 
 ## Update an existing deployment
 
@@ -108,3 +108,5 @@ npm run demo:reset:remote -- --confirm=tidepath-demo
 ```
 
 It deletes demo activity, saved report versions, reminders and sessions before restoring the seed. The guarded reset temporarily removes the snapshot-delete protection and reinstalls it afterward. It is restricted to the original database ID and refuses a fork’s different ID. It is not a deployment step or a general reset tool for other accounts.
+
+For an empty nonprofit workspace, follow [WORKSPACE.md](WORKSPACE.md) instead of importing the fictional seed.

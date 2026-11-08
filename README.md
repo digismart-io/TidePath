@@ -6,7 +6,7 @@ TidePath connects family registration, attendance, mentors, volunteer hours, fam
 
 [Open the working app](https://tidepath-demo.go-610.workers.dev/) · [Explore the Programs website](https://digismart-io.github.io/TidePath/) · [Read the submission overview](docs/SUBMISSION.md)
 
-> Hackathon prototype with fictional records only. The working source is currently on `codex/tidepath-demo`, in [draft PR #1](https://github.com/digismart-io/TidePath/pull/1) targeting `main`. The live demo is already deployed. Shared demo accounts are for exploration with invented data.
+> Hackathon prototype with fictional records only. The complete application is on `main`. Shared demo accounts are for exploration with invented data.
 
 ## What it does
 
@@ -55,7 +55,7 @@ Follow the [three-minute walkthrough and rehearsal guide](docs/TEST-GUIDE.md). F
 Requires Node.js 24 or newer and npm.
 
 ```sh
-git clone --branch codex/tidepath-demo https://github.com/digismart-io/TidePath.git
+git clone https://github.com/digismart-io/TidePath.git
 cd TidePath
 npm ci
 npm run db:reset
@@ -70,7 +70,17 @@ Open `http://localhost:8787`. The local app runs the same Worker handlers agains
 npm run check
 ```
 
-The check includes JavaScript syntax validation and **52 integration tests** covering permissions, attendance submission and concurrency, family registration, follow-up rules, assessments, CSV matching, transaction rollback, repeat imports and report reconciliation. Tests use isolated in-memory databases.
+The check includes JavaScript syntax validation and **63 automated tests** covering permissions, attendance submission and concurrency, family registration, follow-up rules, assessments, CSV matching, transaction rollback, repeat imports and report reconciliation. Tests use isolated databases and cover administration, account permissions, migration safety, clean workspace setup and PWA caching boundaries.
+
+## Adapt it to another nonprofit
+
+Managers use **Manage workspace** to create, edit or archive programs, groups, volunteers and staff accounts; assign session leaders to groups; schedule sessions; and change the organization name, service areas and reporting dates. Program profiles include age ranges, schedules, descriptions, outcomes and intake policies. Mentor matches support any mentoring program. Historical records remain available when an item is archived. Staff access changes revoke existing sessions; passwords and hashes are excluded from audit payloads.
+
+Start without fictional families using `npm run setup:workspace -- --local` **instead of** `npm run db:reset`. It asks for organization details and the first manager credentials, and refuses to overwrite an existing workspace. Run `TIDEPATH_DEMO_MODE=false npm run dev` afterward. See [workspace setup and administration](docs/WORKSPACE.md) for hosted setup and operating details. The separate public Programs website reads the active program catalog from the app; its TidePath branding and editorial copy can be adapted for another organization.
+
+## Install on a phone or tablet
+
+Open the app over HTTPS and use **Install app** for browser-specific guidance. On iPhone/iPad, use Safari → Share → Add to Home Screen; on Android, use the browser’s installation option. Desktop browsers can also install it. The app includes a manifest, standalone display, home-screen icons and an offline application shell. **Saving attendance and viewing records require connectivity.** The service worker does not cache API responses or queue offline submissions.
 
 ## Architecture and AI
 
@@ -86,10 +96,23 @@ A branch or fork copies code and public configuration, **not Cloudflare login cr
 
 Follow the [deployment guide](docs/DEPLOYMENT.md). It covers local credentials, optional AI, GitHub Pages and the distinction between a new-account setup and updating an existing deployment.
 
+## Assumptions behind the prototype
+
+- **Synthetic demonstration data.** Children, families, program designs, staff/volunteer histories, schools, contact events and outcome scores are made up to demonstrate functionality. Seed totals are test fixtures, not measured nonprofit results.
+- **A suitable device is available at the session.** The nonprofit ensures that the person taking attendance can use a phone or a provided tablet. We do not assume that every staff member or volunteer owns a compatible phone; shared devices need staff sign-in and sign-out.
+- **Connectivity is available when submitting.** The PWA can open a cached application shell, but attendance and other records require a network connection. It does not queue offline attendance or claim unsent work has synchronized. A device/connectivity fallback remains an operational responsibility.
+- **Someone records attendance promptly.** An assigned session leader marks everyone and submits once. Missing attendance is not treated as student absence. In-app reminders highlight delayed work, but people remain responsible for completing it.
+- **Identity matches need human confirmation.** Shared names, phone numbers or emails are clues. Staff verify ambiguous family matches; the app does not infer a person's language or automatically merge identities.
+- **Follow-up rules reflect an agreed policy.** The demo uses two consecutive unexplained absences within one regular program. Optional events are excluded; managers can raise manual concerns when the automatic rule does not fit.
+- **Self-assessments are voluntary, non-clinical feedback.** Staff use the program's actual question and scale. Missing responses stay visible; score changes are descriptive and are not proof of impact.
+- **Staff own decisions and review AI wording.** AI drafts text, while code validates records and calculates numbers. Generated messages and narrative notes need human review.
+- **Outbound delivery is simulated.** No email, SMS or WhatsApp message is sent. A transactional-email provider is a straightforward next integration, but requires a verified sender, credentials, recipient/privacy decisions, delivery status and error handling. A recorded simulated send is not evidence that a family was contacted.
+- **One nonprofit runs each deployment.** Organizational provisioning, data retention, real-data permissions and field validation must be agreed before a real-data pilot. This is a working hackathon prototype, not a claim that those organizational decisions have been completed.
+
 ## Limits of this prototype
 
 - CSV imports cover signups and enrollment: 20 rows / 20 KB per batch, with explicit identity review. There is no direct Google Sheets sync, historical attendance import or destructive merge of existing database profiles.
-- Contacts are simulated. The queue tracks owners and overdue tasks, but daily checks refresh assigned in-app reminders, but there is no outbound email/SMS/WhatsApp delivery.
+- Contacts are simulated. The queue tracks owners and overdue tasks, and daily checks refresh assigned in-app reminders; there is no outbound email/SMS/WhatsApp delivery.
 - The PWA has an offline shell; attendance requires connectivity and does not synchronize offline.
 - Reports use the configured demo quarter and current records. Saved report versions freeze evidence and disclosures; a general quarter-selection workflow is not implemented.
 - Assessments are voluntary, non-clinical program feedback. Descriptive changes do not establish program effectiveness. Counseling, donor and financial records remain in their existing systems.
@@ -101,6 +124,7 @@ Time savings and real-world outcomes have not been measured. See [the source bri
 
 - [Submission overview and challenge fit](docs/SUBMISSION.md)
 - [Demo walkthrough, expected totals and tests](docs/TEST-GUIDE.md)
+- [Workspace administration and clean setup](docs/WORKSPACE.md)
 - [Deployment and fork setup](docs/DEPLOYMENT.md)
 - [Architecture, records and API responsibilities](docs/ARCHITECTURE.md)
 - [Program catalog](docs/PROGRAM-CATALOG.md)

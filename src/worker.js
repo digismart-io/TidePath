@@ -1,3 +1,4 @@
+import { administration, workspace, mentoring } from './admin.js';
 import { weeklyBrief, runOperationsCheck, quarterReadiness, snapshotNarrative } from './operations.js';
 import { previewIntake, commitIntake } from './imports.js';
 const encoder = new TextEncoder();
@@ -27,7 +28,7 @@ function equal(a,b) { if(a.length!==b.length)return false;let different=0;for(le
 async function actor(request,db) {
   const token=request.headers.get('cookie')?.match(/(?:^|;\s*)tp_session=([^;]+)/)?.[1];
   if(!token)return null;
-  return first(db,'SELECT s.id,s.name,s.email,s.role FROM auth_sessions a JOIN staff s ON s.id=a.staff_id WHERE a.token_hash=? AND a.expires_at>?',await digest(token),now());
+  return first(db,'SELECT s.id,s.name,s.email,s.role FROM auth_sessions a JOIN staff s ON s.id=a.staff_id WHERE a.token_hash=? AND a.expires_at>? AND s.active=1',await digest(token),now());
 }
 async function throttle(db,key,limit) {
   const start=Math.floor(Date.now()/600000);
@@ -77,10 +78,10 @@ async function reconcileProgramFollowups(db,studentIds,programId) {
     concerns.push({studentId,count,latest});
   }
   if(!concerns.length)return;
-  const manager=await first(db,"SELECT id FROM staff WHERE role='manager' ORDER BY id LIMIT 1");
+  const manager=await first(db,"SELECT id FROM staff WHERE role='manager' AND active=1 ORDER BY id LIMIT 1");
   await db.batch(concerns.map(({studentId,count,latest})=>db.prepare(`INSERT OR IGNORE INTO followups (id,student_id,program_id,reason,owner_id,due_date,status,next_action,created_at) VALUES (?,?,?,?,?,?,'open',?,?)`).bind(uid(),studentId,programId,`${count} consecutive unexplained absences, most recently ${latest}.`,manager.id,nextWorkingDay(latest),'Contact guardian to understand what support is needed.',latest+'T22:00:00.000Z')));
 }
-export async function report(db) {
+export async function report(db,{demo=true}={}) {
   const config=await settings(db),start=config.quarter_start,end=config.quarter_end;
   const [students,enrollments,sessions,attendance,hours,matches,assessments,tasks,programs,groups]=await Promise.all([
     all(db,'SELECT * FROM students'),all(db,'SELECT e.*,g.program_id,g.school FROM enrollments e JOIN groups g ON g.id=e.group_id WHERE e.start_date<=? AND (e.end_date IS NULL OR e.end_date>=?)',end,start),
@@ -98,7 +99,7 @@ export async function report(db) {
   const pairs=assessments.filter(a=>a.phase==='end').map(e=>{const s=assessments.find(a=>a.student_id===e.student_id&&a.program_id===e.program_id&&a.phase==='start');return s?{student_id:e.student_id,program_id:e.program_id,start:s.score,end:e.score,gain:e.score-s.score}:null;}).filter(Boolean);
   const uniqueIds=[...new Set(enrollments.map(e=>e.student_id))];
   return {
-    start,end,generated_at:now(),demo_today:config.demo_today,families,
+    start,end,generated_at:now(),demo_today:config.demo_today,families,workspace:workspace(config),demo,
     totals:{students:uniqueIds.length,program_enrollments:new Set(enrollments.map(e=>`${e.student_id}:${e.program_id}`)).size,enrollment_rows:enrollments.length,sessions:sessions.length,submitted_sessions:sessions.filter(s=>s.status==='submitted').length,cancelled_sessions:sessions.filter(s=>s.status==='cancelled').length,incomplete_sessions:sessions.filter(s=>s.status==='draft').length,expected_attendance:committed.length,attended:attended.length,absent:rateAbsent,excused:excused.length,rate_attended:rateAttended,rate_absent:rateAbsent,attendance_rate:rateAttended+rateAbsent?Math.round(rateAttended/(rateAttended+rateAbsent)*1000)/10:null,unmarked:attendance.filter(a=>a.session_status==='draft'&&a.status===null).length,approved_hours:hours.filter(h=>h.status==='approved').reduce((a,h)=>a+h.hours,0),pending_hours:hours.filter(h=>h.status==='pending').reduce((a,h)=>a+h.hours,0),mentor_matches:matches.length,open_followups:tasks.filter(t=>t.status!=='resolved').length,resolved_followups:tasks.filter(t=>t.status==='resolved').length,assessment_pairs:pairs.length,assessment_missing_end:assessments.filter(a=>a.phase==='start').length-pairs.length,average_gain:pairs.length?pairs.reduce((n,p)=>n+p.gain,0)/pairs.length:0},
     programs:programs.map(p=>({...p,students:new Set(enrollments.filter(e=>e.program_id===p.id).map(e=>e.student_id)).size,attended:attended.filter(a=>a.program_id===p.id).length,absent:absent.filter(a=>a.program_id===p.id).length})),
     source_records:{enrollments,sessions,attendance,hours,matches,assessments,followups:tasks},
@@ -106,7 +107,7 @@ export async function report(db) {
   };
 }
 async function quarterPreview(db,demo){
- const [r,brief]=await Promise.all([report(db),weeklyBrief(db,demo)]),readiness=quarterReadiness(r,brief);
+ const [r,brief]=await Promise.all([report(db,{demo}),weeklyBrief(db,demo)]),readiness=quarterReadiness(r,brief);
  const {generated_at,...stableReport}=r;
  const fingerprint=await digest(JSON.stringify({report:stableReport,readiness}));
  return {report:r,readiness,fingerprint,narrative:snapshotNarrative(r,readiness)};
@@ -121,29 +122,29 @@ async function api(request,env,url){
     const origin=request.headers.get('origin');if(origin&&origin!==url.origin)fail(403,'Cross-site requests are not allowed.');
     if(request.headers.get('sec-fetch-site')==='cross-site')fail(403,'Cross-site requests are not allowed.');
   }
-  if(path==='/api/public/programs'&&method==='GET')return json({programs:await all(db,'SELECT * FROM programs'),groups:await all(db,'SELECT * FROM groups'),demo:env.DEMO_MODE==='true'});
+  if(path==='/api/public/programs'&&method==='GET')return json({programs:await all(db,'SELECT * FROM programs WHERE active=1'),groups:await all(db,'SELECT g.* FROM groups g JOIN programs p ON p.id=g.program_id WHERE g.active=1 AND p.active=1'),workspace:workspace(await settings(db)),demo:env.DEMO_MODE==='true'},200,{'Access-Control-Allow-Origin':'*'});
   if(path==='/api/login'&&method==='POST'){
     const data=await body(request),email=text(data.email,'Email').toLowerCase(),password=text(data.password,'Password');
     await throttle(db,await digest(`login:${request.headers.get('CF-Connecting-IP')||'local'}:${email}`),15);
     const user=await first(db,'SELECT * FROM staff WHERE email=?',email);
     const hash=await passwordHash(password,user?.password_salt||'unknown-account');
-    if(!user||!equal(hash,user.password_hash))fail(401,'Email or password is incorrect.');
+    if(!user||!user.active||!equal(hash,user.password_hash))fail(401,'Email or password is incorrect.');
     const token=uid()+uid();await run(db,'INSERT INTO auth_sessions VALUES (?,?,?)',await digest(token),user.id,new Date(Date.now()+8*3600000).toISOString());
     await run(db,'DELETE FROM auth_sessions WHERE expires_at<?',now());
     return json({ok:true},200,{'Set-Cookie':`tp_session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${url.protocol==='https:'?'; Secure':''}`});
   }
   const user=await actor(request,db);
-  if(path==='/api/me'&&method==='GET')return json({user,demo:env.DEMO_MODE==='true',ai_available:Boolean(env.AI&&env.AI_MODEL)});
+  if(path==='/api/me'&&method==='GET')return json({user,workspace:workspace(await settings(db)),demo:env.DEMO_MODE==='true',ai_available:Boolean(env.AI&&env.AI_MODEL)});
   if(path==='/api/register'&&method==='POST'){
     const data=await body(request);await throttle(db,await digest(`register:${request.headers.get('CF-Connecting-IP')||'local'}`),30);
     const name=text(data.guardian_name,'Guardian name',120),email=text(data.email,'Guardian email').toLowerCase();
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))fail(400,'Enter a valid guardian email address.');
     const language=optional(data.language,40)||'English';if(!['English','Spanish','Haitian Creole'].includes(language))fail(400,'Choose English, Spanish, or Haitian Creole.');
-    const neighborhood=data.neighborhood;if(!['Little Havana','West Little River'].includes(neighborhood))fail(400,'Choose Little Havana or West Little River.');
+    const config=await settings(db),neighborhood=data.neighborhood;if(!workspace(config).service_areas.includes(neighborhood))fail(400,'Choose a configured service area.');
     // Legacy single-child submissions and the family form use the same validation and atomic save.
     const inputs=data.children===undefined?[data]:data.children;
     if(!Array.isArray(inputs)||!inputs.length||inputs.length>10)fail(400,'Include between one and ten children.');
-    const selected=await all(db,'SELECT g.*,p.min_age,p.max_age,p.details FROM groups g JOIN programs p ON p.id=g.program_id');
+    const selected=await all(db,'SELECT g.*,p.min_age,p.max_age,p.details FROM groups g JOIN programs p ON p.id=g.program_id WHERE g.active=1 AND p.active=1');
     const children=inputs.map((child,index)=>{
       if(!child||typeof child!=='object'||Array.isArray(child))fail(400,`Child ${index+1}: enter child details.`);
       const first_name=text(child.first_name,`Child ${index+1} first name`,80),last_name=text(child.last_name,`Child ${index+1} last name`,80);
@@ -157,7 +158,7 @@ async function api(request,env,url){
     });
     const keys=children.map(c=>JSON.stringify([c.first_name.toLowerCase(),c.last_name.toLowerCase(),c.age]));
     if(new Set(keys).size!==keys.length)fail(400,'The same child appears more than once. Remove the repeated child before submitting.');
-    const config=await settings(db),gid=uid(),existingGuardian=optional(data.guardian_id,100);
+    const gid=uid(),existingGuardian=optional(data.guardian_id,100);
     if(existingGuardian){if(!user)fail(403,'Only staff may link an existing guardian.');requireManager(user);if(!await first(db,'SELECT id FROM guardians WHERE id=?',existingGuardian))fail(400,'Guardian not found.');}
     // Check the combined sibling demand, not just each child's demand separately.
     const demand=new Map();for(const child of children)for(const g of child.gs)demand.set(g.id,(demand.get(g.id)||0)+1);
@@ -181,12 +182,12 @@ async function api(request,env,url){
     const config=await settings(db);
     const groups=await all(db,user.role==='manager'?'SELECT * FROM groups':'SELECT g.* FROM groups g JOIN staff_groups sg ON sg.group_id=g.id WHERE sg.staff_id=?',...(user.role==='manager'?[]:[user.id]));
     const sessions=await all(db,`SELECT s.*,g.name group_name,g.school,g.program_id,g.time,(SELECT COUNT(*) FROM attendance a WHERE a.session_id=s.id) roster_count,(SELECT COUNT(*) FROM attendance a WHERE a.session_id=s.id AND a.status IS NULL) unmarked,(SELECT COUNT(*) FROM attendance a WHERE a.session_id=s.id AND a.status IN ('present','late')) attended FROM sessions s JOIN groups g ON g.id=s.group_id ${user.role==='teacher'?'JOIN staff_groups sg ON sg.group_id=g.id WHERE sg.staff_id=?':''} ORDER BY s.date DESC`,...(user.role==='teacher'?[user.id]:[]));
-    const common={user,config,groups,sessions,programs:await all(db,'SELECT * FROM programs'),demo:env.DEMO_MODE==='true',ai_available:Boolean(env.AI&&env.AI_MODEL)};
+    const common={user,config,groups,sessions,programs:await all(db,'SELECT * FROM programs'),demo:env.DEMO_MODE==='true',ai_available:Boolean(env.AI&&env.AI_MODEL),workspace:workspace(config)};
     if(user.role==='teacher')return json(common);
     const [students,guardians,links,enrollments,volunteers,matches,hours,followups,staff,rep]=await Promise.all([
       all(db,'SELECT * FROM students ORDER BY first_name'),all(db,'SELECT * FROM guardians ORDER BY name'),all(db,'SELECT * FROM student_guardians'),all(db,'SELECT e.*,g.program_id,g.name group_name,g.school FROM enrollments e JOIN groups g ON g.id=e.group_id'),all(db,'SELECT * FROM volunteers ORDER BY name'),
       all(db,'SELECT m.*,v.name volunteer_name FROM mentor_matches m JOIN volunteers v ON v.id=m.volunteer_id'),all(db,'SELECT h.*,v.name volunteer_name,s.date,g.name group_name FROM volunteer_hours h JOIN volunteers v ON v.id=h.volunteer_id JOIN sessions s ON s.id=h.session_id JOIN groups g ON g.id=s.group_id ORDER BY s.date DESC'),
-      all(db,'SELECT f.*,s.first_name,s.last_name,p.name program_name,st.name owner_name FROM followups f JOIN students s ON s.id=f.student_id JOIN programs p ON p.id=f.program_id JOIN staff st ON st.id=f.owner_id ORDER BY CASE WHEN f.status=\'resolved\' THEN 1 ELSE 0 END,f.due_date'),all(db,'SELECT id,name,email,role FROM staff'),report(db)
+      all(db,'SELECT f.*,s.first_name,s.last_name,p.name program_name,st.name owner_name FROM followups f JOIN students s ON s.id=f.student_id JOIN programs p ON p.id=f.program_id JOIN staff st ON st.id=f.owner_id ORDER BY CASE WHEN f.status=\'resolved\' THEN 1 ELSE 0 END,f.due_date'),all(db,'SELECT id,name,email,role,active,version FROM staff'),report(db,{demo:env.DEMO_MODE==='true'})
     ]);
     return json({...common,students,guardians,links,enrollments,volunteers,matches,hours,followups,staff,report:rep,households:await all(db,'SELECT * FROM households'),brief:await weeklyBrief(db,env.DEMO_MODE==='true')});
   }
@@ -214,6 +215,7 @@ async function api(request,env,url){
     }
   }
   requireManager(user);
+  if(path.startsWith('/api/admin'))return json(await administration(db,user,path,method,method==='GET'?{}:await body(request),{passwordHash}),method==='POST'?201:200);
   if(path==='/api/operations/check'&&method==='POST')return json(await runOperationsCheck(db,{demo:env.DEMO_MODE==='true',trigger:'manual',actor_id:user.id}));
   if(path==='/api/quarter/close'&&method==='GET')return json(await quarterPreview(db,env.DEMO_MODE==='true'));
   if(path==='/api/quarter/snapshots'&&method==='GET')return json({snapshots:await all(db,'SELECT id,quarter_start,quarter_end,status,created_at,created_by,notes FROM report_snapshots ORDER BY created_at DESC,id DESC')});
@@ -256,7 +258,7 @@ async function api(request,env,url){
   if(path==='/api/followups'&&method==='POST'){
     const data=await body(request),config=await settings(db);
     if(!await first(db,'SELECT 1 FROM enrollments e JOIN groups g ON g.id=e.group_id WHERE e.student_id=? AND g.program_id=?',data.student_id,data.program_id))fail(400,'Choose a participant and one of their programs.');
-    const owner=optional(data.owner_id,100)||user.id;if(!await first(db,'SELECT id FROM staff WHERE id=?',owner))fail(400,'Choose a staff owner.');
+    const owner=optional(data.owner_id,100)||user.id;if(!await first(db,'SELECT id FROM staff WHERE id=? AND active=1',owner))fail(400,'Choose a staff owner.');
     if(!isDay(data.due_date))fail(400,'Enter a valid due date.');
     if(await first(db,"SELECT id FROM followups WHERE student_id=? AND program_id=? AND status!='resolved'",data.student_id,data.program_id))fail(409,'An open follow-up already exists for this child and program. Add a note to that follow-up.');
     const reason='Staff concern: '+text(data.reason,'Reason for the check-in',1000),next=text(data.next_action,'Next action',1000),id=uid(),stamp=now();
@@ -281,10 +283,10 @@ async function api(request,env,url){
   }
   if(path==='/api/import/preview'&&method==='POST'){const data=await body(request);return json(await previewIntake(db,data.csv));}
   if(path==='/api/import/commit'&&method==='POST')return json(await commitIntake(db,user,await body(request)),201);
-  if(path==='/api/report'&&method==='GET')return json(await report(db));
+  if(path==='/api/report'&&method==='GET')return json(await report(db,{demo:env.DEMO_MODE==='true'}));
   if(path==='/api/report/draft'&&method==='POST'){
-    const rep=await report(db),t=rep.totals;
-    const fallback=`TidePath · Q3 2026 · Fictional demonstration\n\nParticipation\n${t.students} unique students held ${t.program_enrollments} program enrollments. Staff submitted ${t.submitted_sessions} session rosters. There were ${t.attended} attended student-sessions and ${t.absent} unexplained absences. The regular-session attendance rate was ${t.attendance_rate??'not available'}% (${t.rate_attended} attended / ${t.rate_attended+t.rate_absent} recorded, non-excused opportunities). Optional community events are excluded from this rate.\n\nVolunteer contribution\n${t.approved_hours} approved volunteer hours are included; ${t.pending_hours} hours await approval.\n\nFollow-through\n${t.open_followups} follow-ups remain open and ${t.resolved_followups} are resolved. Simulated contact attempts are demonstration events, not actual messages.\n\nAssessments and limitations\n${t.assessment_pairs} paired self-assessments show an average change of ${t.average_gain.toFixed(2)} on a five-point scale. This fictional, descriptive measure does not establish program effectiveness. ${t.assessment_missing_end} end assessments are missing.\n\nData quality\n${t.incomplete_sessions} rosters remain incomplete, with ${t.unmarked} unmarked entries. Draft rosters and cancelled sessions are excluded from attendance totals. This report is provisional until the quarter closes and outstanding entries are reviewed.`;
+    const rep=await report(db,{demo:env.DEMO_MODE==='true'}),t=rep.totals;
+    const fallback=`${rep.workspace.organization_name} · ${rep.start}–${rep.end}${rep.demo?' · Fictional demonstration':''}\n\nParticipation\n${t.students} unique students held ${t.program_enrollments} program enrollments. Staff submitted ${t.submitted_sessions} session rosters. There were ${t.attended} attended student-sessions and ${t.absent} unexplained absences. The regular-session attendance rate was ${t.attendance_rate??'not available'}% (${t.rate_attended} attended / ${t.rate_attended+t.rate_absent} recorded, non-excused opportunities). Optional community events are excluded from this rate.\n\nVolunteer contribution\n${t.approved_hours} approved volunteer hours are included; ${t.pending_hours} hours await approval.\n\nFollow-through\n${t.open_followups} follow-ups remain open and ${t.resolved_followups} are resolved. Simulated contact attempts are demonstration events, not actual messages.\n\nAssessments and limitations\n${t.assessment_pairs} paired self-assessments show an average change of ${t.average_gain.toFixed(2)} on a five-point scale. This fictional, descriptive measure does not establish program effectiveness. ${t.assessment_missing_end} end assessments are missing.\n\nData quality\n${t.incomplete_sessions} rosters remain incomplete, with ${t.unmarked} unmarked entries. Draft rosters and cancelled sessions are excluded from attendance totals. This report is provisional until the quarter closes and outstanding entries are reviewed.`;
     // Numeric report sections are assembled by code. AI contributes only qualitative
     // notes, preventing the model from restating a correct rate with a wrong divisor.
     let draft=await generateDraft(env,`Write two short paragraphs of qualitative staff-review notes for a fictional youth nonprofit's provisional quarterly report. Return plain text without headings, markdown, dates, counts, percentages or any other numbers. Do not restate statistics or describe attendance calculations. Only recommend reviewing outstanding records and following through on assigned family contacts. Context flags: ${JSON.stringify({unfinished_rosters:t.incomplete_sessions>0,pending_volunteer_approvals:t.pending_hours>0,missing_end_assessments:t.assessment_missing_end>0,unresolved_family_followups:t.open_followups>0,quarter_is_provisional:true})}. Do not invent program outcomes, clinical findings, measured savings, or completed actions. Explain that descriptive self-assessments do not establish causality.`,fallback);
@@ -320,7 +322,7 @@ async function api(request,env,url){
       return json({ok:true,simulated:kind==='simulated_send'});
     }
     if(method==='PUT'&&!followMatch[2]){
-      const data=await body(request),owner=text(data.owner_id,'Owner',100);if(!await first(db,'SELECT id FROM staff WHERE id=?',owner))fail(400,'Owner not found.');
+      const data=await body(request),owner=text(data.owner_id,'Owner',100);if(!await first(db,'SELECT id FROM staff WHERE id=? AND active=1',owner))fail(400,'Owner not found.');
       if(!isDay(data.due_date))fail(400,'Enter a valid due date.');
       const action=text(data.next_action,'Next action',1000);
       await db.batch([db.prepare('UPDATE followups SET owner_id=?,due_date=?,next_action=? WHERE id=?').bind(owner,data.due_date,action,task.id),db.prepare('INSERT INTO contact_events VALUES (?,?,?,?,?,?)').bind(uid(),task.id,'assignment',`Owner: ${owner}. Due: ${data.due_date}. Next action: ${action}`,user.id,now())]);return json({ok:true});
@@ -328,7 +330,7 @@ async function api(request,env,url){
   }
   if(path==='/api/hours'&&method==='POST'){
     const data=await body(request),hours=Number(data.hours);if(!Number.isFinite(hours)||hours<=0||hours>24)fail(400,'Hours must be greater than zero and at most 24.');
-    const session=await first(db,"SELECT id FROM sessions WHERE id=? AND status!='cancelled'",data.session_id);if(!session||!await first(db,'SELECT id FROM volunteers WHERE id=?',data.volunteer_id))fail(400,'Choose an existing volunteer and a non-cancelled session.');
+    const session=await first(db,"SELECT id FROM sessions WHERE id=? AND status!='cancelled'",data.session_id);if(!session||!await first(db,'SELECT id FROM volunteers WHERE id=? AND active=1',data.volunteer_id))fail(400,'Choose an existing volunteer and a non-cancelled session.');
     if(await first(db,'SELECT id FROM volunteer_hours WHERE volunteer_id=? AND session_id=?',data.volunteer_id,data.session_id))fail(409,'Hours already exist for this volunteer and session. Review the existing entry instead.');
     await run(db,"INSERT INTO volunteer_hours VALUES (?,?,?,?,'pending',?)",uid(),data.volunteer_id,data.session_id,hours,optional(data.note,500));return json({ok:true},201);
   }
@@ -340,13 +342,14 @@ async function api(request,env,url){
   }
   if(path==='/api/matches'&&method==='POST'){
     const data=await body(request),config=await settings(db);
-    if(!await first(db,'SELECT id FROM students WHERE id=?',data.student_id)||!await first(db,"SELECT id FROM volunteers WHERE id=? AND role='Mentor'",data.volunteer_id))fail(400,'Choose an existing student and mentor.');
-    if(!await first(db,"SELECT 1 FROM enrollments e JOIN groups g ON g.id=e.group_id WHERE student_id=? AND g.program_id='harbor' AND e.start_date<=? AND (e.end_date IS NULL OR e.end_date>=?)",data.student_id,config.demo_today,config.demo_today))fail(400,'The student must be enrolled in Harbor Mentors.');
-    const active=await first(db,'SELECT * FROM mentor_matches WHERE student_id=? AND end_date IS NULL',data.student_id);
+    const programId=optional(data.program_id,100)||'harbor',program=await first(db,'SELECT * FROM programs WHERE id=? AND active=1',programId);
+    if(!program||!mentoring(program)||!await first(db,'SELECT id FROM students WHERE id=?',data.student_id)||!await first(db,"SELECT id FROM volunteers WHERE id=? AND role='Mentor' AND active=1",data.volunteer_id))fail(400,'Choose an existing student and mentor.');
+    if(!await first(db,"SELECT 1 FROM enrollments e JOIN groups g ON g.id=e.group_id WHERE student_id=? AND g.program_id=? AND e.start_date<=? AND (e.end_date IS NULL OR e.end_date>=?)",data.student_id,programId,config.demo_today,config.demo_today))fail(400,'The student must be enrolled in the selected mentoring program.');
+    const active=await first(db,'SELECT * FROM mentor_matches WHERE student_id=? AND program_id=? AND end_date IS NULL',data.student_id,programId);
     if(active?.volunteer_id===data.volunteer_id)return json({ok:true});
     const previous=new Date(config.demo_today+'T12:00:00Z');previous.setUTCDate(previous.getUTCDate()-1);
-    const writes=[];if(active)writes.push(db.prepare('UPDATE mentor_matches SET end_date=? WHERE id=?').bind(previous.toISOString().slice(0,10),active.id));
-    writes.push(db.prepare('INSERT INTO mentor_matches VALUES (?,?,?,?,NULL)').bind(uid(),data.student_id,data.volunteer_id,config.demo_today));await db.batch(writes);await audit(db,user,'mentor_assigned',data.student_id,{volunteer_id:data.volunteer_id});return json({ok:true});
+    const writes=[];if(active)writes.push(db.prepare('UPDATE mentor_matches SET end_date=? WHERE id=?').bind(active.start_date===config.demo_today?config.demo_today:previous.toISOString().slice(0,10),active.id));
+    writes.push(db.prepare('INSERT INTO mentor_matches (id,student_id,volunteer_id,start_date,end_date,program_id) VALUES (?,?,?,?,NULL,?)').bind(uid(),data.student_id,data.volunteer_id,config.demo_today,programId));await db.batch(writes);await audit(db,user,'mentor_assigned',data.student_id,{volunteer_id:data.volunteer_id,program_id:programId});return json({ok:true});
   }
   fail(404,'This action was not found.');
 }

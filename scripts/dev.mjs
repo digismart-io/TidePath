@@ -4,13 +4,15 @@ import { existsSync } from 'node:fs';
 import { resolve, extname, sep } from 'node:path';
 import worker from '../src/worker.js';
 import { openDatabase } from './sqlite.mjs';
-if(!existsSync('.local/tidepath.sqlite'))await import('./reset.mjs');
-const {DB,sqlite,close}=openDatabase('.local/tidepath.sqlite');
+const databasePath=process.env.TIDEPATH_DB_PATH||'.local/tidepath.sqlite';
+if(!existsSync(databasePath)){if(process.env.TIDEPATH_DB_PATH)throw new Error('Initialize the custom database before starting the server.');await import('./reset.mjs');}
+const {DB,sqlite,close}=openDatabase(databasePath);
 // Additive schema update for checkouts with an existing local demo database.
 for(const migration of ['0003_import_records.sql','0004_operations_and_snapshots.sql'])sqlite.exec(await readFile(new URL('../migrations/'+migration,import.meta.url),'utf8'));
+if(!sqlite.prepare('PRAGMA table_info(staff)').all().some(c=>c.name==='active')){sqlite.exec('BEGIN');try{for(const migration of ['0005_workspace_administration.sql','0006_workspace_settings.sql'])sqlite.exec(await readFile(new URL('../migrations/'+migration,import.meta.url),'utf8'));sqlite.exec('COMMIT');}catch(e){sqlite.exec('ROLLBACK');throw e;}}
 const root=resolve('public');
-const types={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.json':'application/json','.webmanifest':'application/manifest+json','.svg':'image/svg+xml','.jpg':'image/jpeg','.png':'image/png'};
-const env={DB,DEMO_MODE:'true',ASSETS:{async fetch(request){
+const types={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.json':'application/json','.webmanifest':'application/manifest+json','.svg':'image/svg+xml','.jpg':'image/jpeg','.png':'image/png','.csv':'text/csv; charset=utf-8'};
+const env={DB,DEMO_MODE:process.env.TIDEPATH_DEMO_MODE||'true',ASSETS:{async fetch(request){
   let file;try{file=resolve(root,'.'+decodeURIComponent(new URL(request.url).pathname));}catch{return new Response('Bad path',{status:400});}
   if(file!==root&&!file.startsWith(root+sep))return new Response('Not found',{status:404});
   try{if((await stat(file)).isDirectory())file=resolve(file,'index.html');const data=await readFile(file);return new Response(data,{headers:{'Content-Type':types[extname(file)]||'application/octet-stream'}});}catch{return new Response('Not found',{status:404});}

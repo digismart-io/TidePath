@@ -9,9 +9,13 @@ export const DEMO_PASSWORD = 'TidePath-demo-2026!';
 export function generateSeed() {
   const rows = [];
   const q = v => v === null ? 'NULL' : typeof v === 'number' ? String(v) : "'" + String(v).replaceAll("'", "''") + "'";
-  const add = (table, data) => rows.push(`INSERT INTO ${table} (${Object.keys(data).join(',')}) VALUES (${Object.values(data).map(q).join(',')});`);
+  const add = (table, data) => rows.push(`INSERT ${table==='settings'?'OR IGNORE ':''}INTO ${table} (${Object.keys(data).join(',')}) VALUES (${Object.values(data).map(q).join(',')});`);
   const id = (prefix, i) => `${prefix}-${String(i).padStart(3,'0')}`;
   const date = (start, weeks) => new Date(Date.parse(start+'T12:00:00Z')+weeks*7*86400000).toISOString().slice(0,10);
+  add('settings',{key:'organization_name',value:'Tidepath Family Alliance'});
+  add('settings',{key:'service_areas',value:JSON.stringify(['Little Havana','West Little River'])});
+  add('settings',{key:'admin_version',value:'0'});
+  add('settings',{key:'admin_edit_token',value:''});
   add('settings',{key:'demo_today',value:'2026-09-24'});
   add('settings',{key:'quarter_start',value:'2026-07-01'});
   add('settings',{key:'quarter_end',value:'2026-09-30'});
@@ -52,7 +56,7 @@ export function generateSeed() {
   const mentorNames=['Ana Morales','David Park','Nadia Ahmed','Marcus Ellis','Beatriz Costa'];
   for(let i=1;i<=9;i++) add('volunteers',{id:id('volunteer',i),name:i<=5?mentorNames[i-1]:['Emma Wilson','Luis Torres','Fatima Ali','Theo James'][i-6],email:`volunteer${i}@example.com`,role:i<=5?'Mentor':'Workshop facilitator'});
   for(const [i,name,role] of [[10,'Sabine Pierre','Workshop facilitator'],[11,'Raul Alvarez','Workshop facilitator'],[12,'Mireille Joseph','Event helper'],[13,'Carmen Diaz','Event helper'],[14,'Jean Laurent','Supply driver'],[15,'Rafael Cruz','Supply driver']])add('volunteers',{id:id('volunteer',i),name,email:`volunteer${i}@example.com`,role});
-  for(let i=1;i<=20;i++) add('mentor_matches',{id:`match-${i}`,student_id:id('student',i),volunteer_id:id('volunteer',Math.ceil(i/4)),start_date:'2026-07-01',end_date:null});
+  for(let i=1;i<=20;i++) add('mentor_matches',{id:`match-${i}`,student_id:id('student',i),volunteer_id:id('volunteer',Math.ceil(i/4)),start_date:'2026-07-01',end_date:null,program_id:'harbor'});
   const sessionData=[],attData=[],hourData=[];
   const topicsH=['Getting to know you','Strengths and interests','Small goals','Asking for help','A challenge I handled','Listening well','My support network','School transitions','Making a plan','Checking our goals','Staying connected','Quarter reflection'];
   const topicsW=['Our support network','Feeling safe at school','Trusted adults','Asking for help','Respectful communication','Handling conflict','Online safety','Safe places','Supporting a friend','Community safety','Practice asking for help','Reflection and celebration'];
