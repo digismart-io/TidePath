@@ -22,7 +22,9 @@ TidePath is a program management app demonstrated with **Tidepath Family Allianc
 | Mentor lists and volunteer hours are separate | Mentor assignment history and approved volunteer contributions share the same records |
 | Quarter-end numbers do not agree | Computed metrics, source-record drill-down, assessment entry, narrative drafting and printable reports |
 
-The opening weekly brief links families needing contact, attendance to finish, missing end responses and pending volunteer hours to their next actions and owners. A daily check refreshes in-app reminders. **Close the quarter** guides review and saves a dated, frozen report version with evidence and disclosed gaps.
+Assessments are optional per program and off by default, including for existing programs without an explicit setting. Managers can enable them under **Manage workspace → Programs → Edit**, using an agreed question and 1–5 scale. Turning collection off retains all scores and saved report versions, stops response reminders, and excludes missing responses from quarter-close gaps. Recorded feedback remains available and is summarized by program; different program measures are not combined into one displayed average. No database reset or destructive migration is required.
+
+The opening weekly brief links families needing contact, attendance to finish, optional feedback for enabled programs and pending volunteer hours to their next actions and owners. A daily check refreshes in-app reminders. **Close the quarter** guides review and saves a dated, frozen report version with evidence and disclosed gaps.
 
 Each participant’s **Why a follow-up?** section explains their submitted attendance, unsubmitted sessions and existing tasks. No manager approval is needed for attendance: submission immediately updates follow-up rules and report totals. Optional family events do not trigger absence alerts.
 
@@ -74,7 +76,7 @@ Open `http://localhost:8787`. The local app runs the same Worker handlers agains
 npm run check
 ```
 
-The check includes JavaScript syntax validation and **68 automated tests** covering permissions, attendance submission and concurrency, family registration, follow-up rules, assessments, CSV matching, transaction rollback, repeat imports and report reconciliation. Tests use isolated databases and cover administration, account permissions, migration safety, clean workspace setup and PWA caching boundaries.
+The check includes JavaScript syntax validation and **72 automated tests** covering permissions, attendance submission and concurrency, family registration, follow-up rules, assessments, CSV matching, transaction rollback, repeat imports and report reconciliation. Tests use isolated databases and cover administration, account permissions, migration safety, clean workspace setup and PWA caching boundaries.
 
 GitHub Actions runs the same checks on Node 22.13.1 and Node 24 for pushes and pull requests. Both are required before merging to this repository’s `main`. Fork maintainers should configure their own branch protection.
 
