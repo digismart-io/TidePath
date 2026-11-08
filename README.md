@@ -42,7 +42,7 @@ Choose a role on the [sign-in screen](https://tidepath-demo.go-610.workers.dev/)
 | `james@tidepath.example` | Session leader | Assigned Bayview safety, Little Havana wellbeing and community-event sessions |
 | `priya@tidepath.example` | Session leader | Assigned Riverside safety, West Little River wellbeing and community-event sessions |
 
-API permissions enforce these boundaries. The family registration form is public and does not disclose existing household identities. Only a manager can confirm links to an existing household.
+API permissions enforce these boundaries. The family registration form is public and does not disclose existing household identities. Only a manager can confirm links to an existing household. From a participant profile, **Edit contact details** updates the shared guardian’s name, email, phone and preferred language for every linked child, with audit history.
 
 A fresh seed contains **100 children, 70 households, five program profiles, 130 distinct child–program enrollments, 66 sessions and 15 volunteers**. Counseling is catalog-only. The scenario date is September 24, 2026, within the July–September quarter; reporting is provisional. The shared live demo changes as people test it.
 
@@ -68,7 +68,7 @@ Open `http://localhost:8787`. The local app runs the same Worker handlers agains
 npm run check
 ```
 
-The check includes JavaScript syntax validation and **40 integration tests** covering permissions, attendance submission and concurrency, family registration, follow-up rules, assessments, CSV matching, transaction rollback, repeat imports and report reconciliation. Tests use isolated in-memory databases.
+The check includes JavaScript syntax validation and **44 integration tests** covering permissions, attendance submission and concurrency, family registration, follow-up rules, assessments, CSV matching, transaction rollback, repeat imports and report reconciliation. Tests use isolated in-memory databases.
 
 ## Architecture and AI
 

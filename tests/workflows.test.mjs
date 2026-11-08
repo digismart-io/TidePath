@@ -145,3 +145,35 @@ test('a full 20-row CSV batch uses bulk writes and stays below the D1 free-tier 
  const csv=intakeCSV(Array.from({length:20},(_,i)=>`bulk,${i},Guardian ${i},bulk${i}@example.com,English,Little Havana,Child${i},Demo,7,together-havana,`));
  const result=await call(env,'/import/commit',{method:'POST',cookie,data:{csv,decisions:Array.from({length:20},()=>({guardian:'new',child:'new'}))}});assert.equal(result.status,201,JSON.stringify(result.data));assert.equal(result.data.new_children,20);assert.ok(queries<50,`used ${queries} prepared statements`);
 });
+
+test('contact updates change one shared guardian for every linked child with before/after audit history',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env),detail=(await call(env,'/guardians/guardian-001',{cookie})).data;
+ assert.equal(detail.children.length,2);const before=detail.guardian;
+ const data={name:'Rosa Rivera Demo',email:'UPDATED@example.com',phone:'+1 305 555 0199',preferred_language:'Haitian Creole',expected:detail.expected};
+ const result=await call(env,'/guardians/guardian-001',{method:'PUT',cookie,data});assert.equal(result.status,200,JSON.stringify(result.data));
+ for(const child of detail.children){const guardian=(await call(env,'/students/'+child.id,{cookie})).data.guardians.find(g=>g.id===before.id);assert.equal(guardian.name,data.name);assert.equal(guardian.email,'updated@example.com');assert.equal(guardian.phone,data.phone);assert.equal(guardian.preferred_language,data.preferred_language);}
+ const audit=sqlite.prepare("SELECT * FROM audit_log WHERE action='guardian_contact_updated'").get();assert.equal(audit.staff_id,'marisol');assert.equal(audit.entity_id,before.id);const change=JSON.parse(audit.detail);assert.equal(change.before.email,before.email);assert.equal(change.after.email,'updated@example.com');
+ assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM guardians').get().n,70);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM households').get().n,70);
+ const task=await call(env,'/followups',{method:'POST',cookie,data:{student_id:detail.children[0].id,program_id:'harbor',reason:'Demo contact update check',next_action:'Call guardian',due_date:'2026-09-25'}});assert.equal(task.status,201);
+ const draft=await call(env,'/followups/'+task.data.id+'/draft',{method:'POST',cookie,data:{}});assert.match(draft.data.text,/Bonjou Rosa Rivera Demo/);
+});
+test('guardian contact edits require manager access and validate fields without altering identities',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env),teacher=await login(env,'elena'),original=(await call(env,'/guardians/guardian-001',{cookie})).data;
+ const data={name:original.guardian.name,email:original.guardian.email,phone:original.guardian.phone,preferred_language:original.guardian.preferred_language,expected:original.expected};
+ for(const method of ['GET','PUT']){assert.equal((await call(env,'/guardians/guardian-001',{method,...(method==='PUT'?{data}:{})})).status,401);assert.equal((await call(env,'/guardians/guardian-001',{method,cookie:teacher,...(method==='PUT'?{data}:{})})).status,403);}
+ for(const patch of [{name:''},{name:'x'.repeat(121)},{email:'invalid'},{phone:'x'.repeat(41)},{preferred_language:'invalid'}])assert.equal((await call(env,'/guardians/guardian-001',{method:'PUT',cookie,data:{...data,...patch}})).status,400);
+ assert.equal((await call(env,'/guardians/nonexistent',{cookie})).status,404);assert.deepEqual(sqlite.prepare("SELECT * FROM guardians WHERE id='guardian-001'").get(),Object.assign(Object.create(null),original.guardian));
+ const clear=await call(env,'/guardians/guardian-001',{method:'PUT',cookie,data:{...data,phone:''}});assert.equal(clear.status,200);assert.equal(sqlite.prepare("SELECT phone FROM guardians WHERE id='guardian-001'").get().phone,'');
+});
+test('concurrent guardian contact edits cannot silently overwrite each other or duplicate successful audit records',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env),detail=(await call(env,'/guardians/guardian-001',{cookie})).data;
+ const data={name:detail.guardian.name,email:detail.guardian.email,phone:detail.guardian.phone,preferred_language:detail.guardian.preferred_language,expected:detail.expected};
+ const results=await Promise.all(['First edit','Second edit'].map(name=>call(env,'/guardians/guardian-001',{method:'PUT',cookie,data:{...data,name}})));assert.deepEqual(results.map(r=>r.status).sort(),[200,409]);assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM audit_log WHERE action='guardian_contact_updated'").get().n,1);
+});
+test('failed contact auditing rolls back the guardian change and matching another email never merges families',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env),detail=(await call(env,'/guardians/guardian-001',{cookie})).data;
+ const data={name:detail.guardian.name,email:'family2@example.com',phone:'',preferred_language:'English',expected:detail.expected};
+ sqlite.exec("CREATE TRIGGER fail_contact_audit BEFORE INSERT ON audit_log WHEN NEW.action='guardian_contact_updated' BEGIN SELECT RAISE(ABORT,'test rollback'); END;");
+ assert.equal((await call(env,'/guardians/guardian-001',{method:'PUT',cookie,data})).status,500);assert.equal(sqlite.prepare("SELECT email FROM guardians WHERE id='guardian-001'").get().email,detail.guardian.email);
+ sqlite.exec('DROP TRIGGER fail_contact_audit');assert.equal((await call(env,'/guardians/guardian-001',{method:'PUT',cookie,data})).status,200);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM households').get().n,70);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM guardians').get().n,70);assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM student_guardians WHERE guardian_id='guardian-001'").get().n,2);
+});

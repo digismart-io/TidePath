@@ -38,6 +38,8 @@ The automatic rule examines the latest submitted attendance within each regular 
 
 Participant explanations use the same consecutive-absence calculation. An existing open task suppresses duplicate tasks for that child/program. Managers can create a manual task for a separate concern, including a pattern across programs. A message attempt does not resolve a concern; staff record resolution explicitly. Automatic processing runs on attendance submission, not on a background schedule.
 
+Managers can edit a guardian’s shared name, email, phone and preferred language from any linked participant profile. The API checks an expected contact fingerprint, conditionally updates the record and writes before/after values to the audit log in one transaction. Existing child links are unchanged; future message drafts read the updated contact.
+
 ## CSV identity review
 
 CSV preview is read-only. Email, phone, guardian-name and child-name similarities produce suggestions, not decisions. Managers explicitly choose existing identities, new records or identities confirmed on an earlier row. The server checks those choices again at import time.

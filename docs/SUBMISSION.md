@@ -42,7 +42,7 @@ Cloudflare Workers AI hosts Meta Llama 3.3 70B Instruct. It drafts message wordi
 
 ## Validation and current limits
 
-The repository includes 40 passing integration tests for permissions, record linkage, attendance completeness and concurrency, follow-up behavior, assessments, CSV identity review, rollback, repeat imports and report calculations. Local browser rehearsals exercised successful writes without adding test data to the live deployment.
+The repository includes 44 passing integration tests for permissions, record linkage, attendance completeness and concurrency, follow-up behavior, assessments, CSV identity review, rollback, repeat imports and report calculations. Local browser rehearsals exercised successful writes without adding test data to the live deployment.
 
 The prototype demonstrates the workflow; it does not yet establish measured time savings or guarantee that every family receives timely contact. There is no live spreadsheet synchronization, scheduled escalation, real outbound messaging, offline attendance synchronization, historical attendance import or immutable issued-report archive. CSV review links new source rows to confirmed identities; it does not destructively merge existing profiles. Reports use the configured demo quarter.
 

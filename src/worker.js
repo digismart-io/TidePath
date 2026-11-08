@@ -206,6 +206,26 @@ async function api(request,env,url){
     }
   }
   requireManager(user);
+  const guardianMatch=path.match(/^\/api\/guardians\/([^/]+)$/);
+  if(guardianMatch){
+    const guardian=await first(db,'SELECT * FROM guardians WHERE id=?',guardianMatch[1]);if(!guardian)fail(404,'Guardian not found.');
+    const contact=g=>({name:g.name,email:g.email,phone:g.phone,preferred_language:g.preferred_language});
+    const expected=await digest(JSON.stringify(contact(guardian)));
+    if(method==='GET')return json({guardian,expected,children:await all(db,'SELECT s.id,s.first_name,s.last_name FROM students s JOIN student_guardians sg ON sg.student_id=s.id WHERE sg.guardian_id=? ORDER BY s.first_name,s.last_name',guardian.id)});
+    if(method==='PUT'){
+      const data=await body(request);if(data.expected!==expected)fail(409,'These contact details changed. Reopen the edit form before saving.');
+      const name=text(data.name,'Guardian name',120),email=text(data.email,'Guardian email',200).toLowerCase(),phone=optional(data.phone,40),preferred_language=data.preferred_language;
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))fail(400,'Enter a valid guardian email address.');
+      if(!['English','Spanish','Haitian Creole'].includes(preferred_language))fail(400,'Choose English, Spanish, or Haitian Creole.');
+      const after={name,email,phone,preferred_language};
+      const results=await db.batch([
+        db.prepare('UPDATE guardians SET name=?,email=?,phone=?,preferred_language=? WHERE id=? AND name=? AND email=? AND phone=? AND preferred_language=?').bind(name,email,phone,preferred_language,guardian.id,guardian.name,guardian.email,guardian.phone,guardian.preferred_language),
+        db.prepare('INSERT INTO audit_log SELECT ?,?,?,?,?,? WHERE changes()>0').bind(uid(),user.id,'guardian_contact_updated',guardian.id,JSON.stringify({before:contact(guardian),after}),now())
+      ]);
+      if(!results[0].meta.changes)fail(409,'These contact details changed while saving. Reopen the edit form.');
+      return json({ok:true});
+    }
+  }
   if(path==='/api/followups'&&method==='POST'){
     const data=await body(request),config=await settings(db);
     if(!await first(db,'SELECT 1 FROM enrollments e JOIN groups g ON g.id=e.group_id WHERE e.student_id=? AND g.program_id=?',data.student_id,data.program_id))fail(400,'Choose a participant and one of their programs.');

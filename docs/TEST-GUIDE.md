@@ -86,3 +86,9 @@ The example contains Rosa Rivera, R. Rivera (alternate email), and “Rivera, Ro
 For new siblings, choose a new guardian/household on the first row, then reuse that row's guardian and create a new child on each sibling row. Managers can choose an existing confirmed guardian even when no automatic suggestion exists. Identity decisions are audited. Invalid ages, groups, incompatible identity links, conflicting program enrollment, capacity failures or database errors roll back the whole batch.
 
 CSV import covers signup and program enrollment only. It does not fetch Google Sheets, import historical attendance, overwrite canonical profiles, or collapse two existing database profiles. Imported alternate spellings/contact values are not promoted to canonical fields. Language is the stated CSV value for new profiles and remains unchanged for existing profiles.
+
+## Edit shared family contact details
+
+As Marisol, open **Participants → a child → Edit contact details** under the guardian. The form lists every child sharing that guardian. Update the guardian name, email, optional phone or preferred language and save. All linked children and future message drafts use the updated shared record. Cancelling leaves the original details unchanged. Previous and new values are recorded with the staff member and time in the audit log. A conflicting edit asks you to reopen the form instead of silently overwriting it. Session leaders and unauthenticated users cannot read or update this endpoint.
+
+For local rehearsal, open Sofia Rivera, edit Rosa Rivera’s invented email/phone, save, then open Mateo Rivera to verify the same details. This changes no household or child links. CSV import still preserves canonical contact details; use this explicit edit action to correct an existing profile.
