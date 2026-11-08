@@ -74,13 +74,13 @@ Open `http://localhost:8787`. The local app runs the same Worker handlers agains
 npm run check
 ```
 
-The check includes JavaScript syntax validation and **74 automated tests** covering permissions, attendance submission and concurrency, family registration, follow-up rules, assessments, CSV matching, transaction rollback, repeat imports and report reconciliation. Tests use isolated databases and cover administration, account permissions, migration safety, clean workspace setup and PWA caching boundaries.
+The check includes JavaScript syntax validation and **78 automated tests** covering permissions, attendance submission and concurrency, family registration, follow-up rules, assessments, CSV matching, transaction rollback, repeat imports and report reconciliation. Tests use isolated databases and cover administration, account permissions, migration safety, clean workspace setup and PWA caching boundaries.
 
 GitHub Actions runs the same checks on Node 22.13.1 and Node 24 for pushes and pull requests. Both are required before merging to this repository’s `main`. Fork maintainers should configure their own branch protection.
 
 ## Adapt it to another nonprofit
 
-Managers use **Manage workspace** to create, edit or archive programs, groups, volunteers and staff accounts; assign session leaders to groups; schedule sessions; and change the organization name, service areas and reporting dates. Program profiles include age ranges, schedules, descriptions, outcomes and intake policies. Mentor matches support any mentoring program. Historical records remain available when an item is archived. Staff access changes revoke existing sessions; passwords and hashes are excluded from audit payloads.
+Managers use **Manage workspace** to create, edit or archive programs, groups, volunteers and staff accounts; assign session leaders to groups; schedule sessions; and change the organization name, service areas and reporting dates. Program profiles include age ranges, schedules, descriptions, outcomes and intake policies. Volunteer and mentor profiles include a description, spoken languages and registration with one or more programs. Mentor matches support any mentoring program. Historical records remain available when an item is archived. Staff access changes revoke existing sessions; passwords and hashes are excluded from audit payloads.
 
 Start without fictional families using `npm run setup:workspace -- --local` **instead of** `npm run db:reset`. It asks for organization details and the first manager credentials, and refuses to overwrite an existing workspace. Run `TIDEPATH_DEMO_MODE=false npm run dev` afterward. See [workspace setup and administration](docs/WORKSPACE.md) for hosted setup and operating details. The separate public Programs website reads the active program catalog from the app; its TidePath branding and editorial copy can be adapted for another organization.
 

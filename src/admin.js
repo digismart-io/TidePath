@@ -47,8 +47,12 @@ export async function administration(db,user,path,method,data,{passwordHash}){
  }
  if(table==='volunteers'){
   if(!Array.isArray(data.languages)||!data.languages.length||data.languages.length>20)fail(400,'Record at least one spoken language (maximum twenty).');const languages=data.languages.map(v=>text(v,'Spoken language',80));if(new Set(languages.map(v=>v.toLowerCase())).size!==languages.length)fail(400,'Choose each spoken language only once.');
+  const previousPrograms=JSON.parse(old?.program_ids||'[]'),program_ids=data.program_ids===undefined||(old&&data.program_ids===old.program_ids)?previousPrograms:data.program_ids;
+  if(!Array.isArray(program_ids)||program_ids.length>100||program_ids.some(id=>typeof id!=='string'||!id.trim())||new Set(program_ids).size!==program_ids.length)fail(400,'Choose each program only once (maximum 100).');
+  const programs=await all(db,'SELECT id,active FROM programs');if(program_ids.some(id=>!programs.some(p=>p.id===id&&(p.active||previousPrograms.includes(id)))))fail(400,'Choose existing active programs. Existing archived registrations may be retained or removed.');
+  const description=data.description===undefined?(old?.description||''):optional(data.description,2000);
   const role=text(data.role,'Volunteer role',80),enabled=active(data.active);if(old&&(old.role==='Mentor'&&role!=='Mentor'||!enabled)&&await first(db,'SELECT 1 FROM mentor_matches WHERE volunteer_id=? AND end_date IS NULL',id))fail(400,'Reassign this mentor’s active matches before changing their role or archiving them.');
-  return save(db,user,table,id,old,{name:text(data.name,'Volunteer name',120),email:email(data.email),role,languages:JSON.stringify(languages),active:enabled,version:data.version});
+  return save(db,user,table,id,old,{name:text(data.name,'Volunteer name',120),email:email(data.email),role,languages:JSON.stringify(languages),description,program_ids:JSON.stringify(program_ids),active:enabled,version:data.version});
  }
  if(table==='staff'){
   if(!['manager','teacher'].includes(data.role))fail(400,'Choose manager or session leader.');const enabled=active(data.active);if(old?.id===user.id&&(!enabled||data.role!=='manager'))fail(400,'Keep your own manager access active. Sign in as another manager to change it.');

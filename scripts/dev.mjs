@@ -11,6 +11,7 @@ const {DB,sqlite,close}=openDatabase(databasePath);
 for(const migration of ['0003_import_records.sql','0004_operations_and_snapshots.sql'])sqlite.exec(await readFile(new URL('../migrations/'+migration,import.meta.url),'utf8'));
 if(!sqlite.prepare('PRAGMA table_info(staff)').all().some(c=>c.name==='active')){sqlite.exec('BEGIN');try{for(const migration of ['0005_workspace_administration.sql','0006_workspace_settings.sql'])sqlite.exec(await readFile(new URL('../migrations/'+migration,import.meta.url),'utf8'));sqlite.exec('COMMIT');}catch(e){sqlite.exec('ROLLBACK');throw e;}}
 if(!sqlite.prepare('PRAGMA table_info(volunteers)').all().some(c=>c.name==='languages'))sqlite.exec(await readFile(new URL('../migrations/0007_volunteer_languages.sql',import.meta.url),'utf8'));
+if(!sqlite.prepare('PRAGMA table_info(volunteers)').all().some(c=>c.name==='description'))sqlite.exec(await readFile(new URL('../migrations/0008_volunteer_profiles.sql',import.meta.url),'utf8'));
 const root=resolve('public');
 const types={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.json':'application/json','.webmanifest':'application/manifest+json','.svg':'image/svg+xml','.jpg':'image/jpeg','.png':'image/png','.csv':'text/csv; charset=utf-8'};
 const env={DB,DEMO_MODE:process.env.TIDEPATH_DEMO_MODE||'true',ASSETS:{async fetch(request){

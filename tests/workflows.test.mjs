@@ -351,6 +351,41 @@ test('empty-workspace bootstrap creates one hashed manager, no sample children, 
  const repeat=spawnSync(process.execPath,['scripts/bootstrap.mjs','--local'],{env,encoding:'utf8'});assert.notEqual(repeat.status,0);assert.equal(local.sqlite.prepare('SELECT COUNT(*) n FROM staff').get().n,1);
 });
 
+test('volunteer descriptions and multiple program registrations persist without changing matches or hours',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env),matches=sqlite.prepare('SELECT * FROM mentor_matches').all(),hours=sqlite.prepare('SELECT * FROM volunteer_hours').all();
+ const base={name:'Profile Demo Mentor',email:'profile-demo@example.com',role:'Mentor',languages:['English','Spanish'],active:true,description:'Helps young people with school transitions and confidence.',program_ids:['harbor','brightminds']};
+ const created=await call(env,'/admin/volunteers',{method:'POST',cookie,data:base});assert.equal(created.status,201,JSON.stringify(created.data));
+ let row=(await adminState(env,cookie)).volunteers.find(v=>v.id===created.data.id);assert.equal(row.description,base.description);assert.deepEqual(JSON.parse(row.program_ids),base.program_ids);
+ let current=(await call(env,'/state',{cookie})).data.volunteers.find(v=>v.id===row.id);assert.equal(current.description,base.description);assert.deepEqual(JSON.parse(current.program_ids),base.program_ids);
+ assert.equal((await call(env,'/admin/volunteers/'+row.id,{method:'PUT',cookie,data:{...base,version:row.version,name:'Updated Profile Demo'}})).status,200);
+ row=(await adminState(env,cookie)).volunteers.find(v=>v.id===row.id);const {description,program_ids,...legacy}=row;
+ assert.equal((await call(env,'/admin/volunteers/'+row.id,{method:'PUT',cookie,data:{...legacy,languages:['English']}})).status,200);
+ row=(await adminState(env,cookie)).volunteers.find(v=>v.id===row.id);assert.equal(row.description,description);assert.deepEqual(JSON.parse(row.program_ids),base.program_ids);
+ assert.equal((await call(env,'/admin/volunteers/'+row.id,{method:'PUT',cookie,data:{...row,languages:['English'],description:'',program_ids:[]}})).status,200);
+ current=(await adminState(env,cookie)).volunteers.find(v=>v.id===row.id);assert.equal(current.description,'');assert.deepEqual(JSON.parse(current.program_ids),[]);
+ assert.deepEqual(sqlite.prepare('SELECT * FROM mentor_matches').all(),matches);assert.deepEqual(sqlite.prepare('SELECT * FROM volunteer_hours').all(),hours);
+ const audit=sqlite.prepare("SELECT detail FROM audit_log WHERE action='workspace_volunteers_saved' AND entity_id=? ORDER BY rowid DESC LIMIT 1").get(row.id);assert.equal(JSON.parse(audit.detail).before.description,base.description);
+});
+test('volunteer program validation rejects unknown, duplicate and newly archived registrations atomically',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env),base={name:'Program Validation Demo',email:'program-validation@example.com',role:'Event helper',languages:['English'],active:true};
+ sqlite.prepare("UPDATE programs SET active=0 WHERE id='together'").run();
+ for(const extra of [{program_ids:['missing']},{program_ids:['harbor','harbor']},{program_ids:['together']},{program_ids:'harbor'},{program_ids:[null]},{description:'x'.repeat(2001)},{description:42}])assert.equal((await call(env,'/admin/volunteers',{method:'POST',cookie,data:{...base,...extra}})).status,400);
+ assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM volunteers').get().n,15);
+ const created=await call(env,'/admin/volunteers',{method:'POST',cookie,data:{...base,program_ids:['harbor']}});assert.equal(created.status,201);sqlite.prepare("UPDATE programs SET active=0 WHERE id='harbor'").run();let row=(await adminState(env,cookie)).volunteers.find(v=>v.id===created.data.id);
+ assert.equal((await call(env,'/admin/volunteers/'+row.id,{method:'PUT',cookie,data:{...base,version:row.version,description:'Retains an existing archived program registration.',program_ids:['harbor']}})).status,200);
+ assert.equal((await call(env,'/admin/volunteers/'+row.id,{method:'PUT',cookie,data:{...base,version:row.version,program_ids:[]}})).status,409);
+ row=(await adminState(env,cookie)).volunteers.find(v=>v.id===row.id);assert.deepEqual(JSON.parse(row.program_ids),['harbor']);
+});
+test('volunteer profile writes remain manager-only and preserve records for rejected callers',async t=>{
+ const {env,sqlite}=setup(t),teacher=await login(env,'elena'),before=sqlite.prepare('SELECT * FROM volunteers').all(),data={name:'Not allowed',email:'not-allowed@example.com',role:'Mentor',languages:['English'],active:true,description:'Profile test',program_ids:['harbor']};
+ for(const [path,method] of [['/admin/volunteers','POST'],['/admin/volunteers/volunteer-001','PUT']])for(const auth of [{},{cookie:teacher}])assert.equal((await call(env,path,{method,...auth,data})).status,auth.cookie?403:401);
+ assert.deepEqual(sqlite.prepare('SELECT * FROM volunteers').all(),before);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM audit_log').get().n,0);
+});
+test('volunteer profile migration preserves all existing volunteers, matches and approved hours',t=>{
+ const local=openDatabase();t.after(()=>local.close());for(const file of readdirSync(new URL('../migrations/',import.meta.url)).filter(f=>f.endsWith('.sql')&&f!=='0008_volunteer_profiles.sql').sort())local.sqlite.exec(readFileSync(new URL('../migrations/'+file,import.meta.url),'utf8'));local.sqlite.exec(fixture.sql);
+ const before=local.sqlite.prepare('SELECT * FROM volunteers').all(),matches=local.sqlite.prepare('SELECT * FROM mentor_matches').all(),hours=local.sqlite.prepare('SELECT * FROM volunteer_hours').all();local.sqlite.exec(readFileSync(new URL('../migrations/0008_volunteer_profiles.sql',import.meta.url),'utf8'));
+ const after=local.sqlite.prepare('SELECT * FROM volunteers').all();assert.deepEqual(after.map(({description,program_ids,...row})=>row),before.map(row=>({...row})));assert.ok(after.every(v=>v.description===''&&v.program_ids==='[]'));assert.deepEqual(local.sqlite.prepare('SELECT * FROM mentor_matches').all(),matches);assert.deepEqual(local.sqlite.prepare('SELECT * FROM volunteer_hours').all(),hours);assert.equal(local.sqlite.prepare('PRAGMA foreign_key_check').all().length,0);
+});
 test('volunteer languages require explicit multi-language entry and persist through edits',async t=>{
  const {env,sqlite}=setup(t),cookie=await login(env);const base={name:'Language Demo',email:'language-demo@example.com',role:'Mentor',active:true};
  for(const languages of [undefined,[],[''],['English','english'],'English',Array(21).fill('Spanish')])assert.equal((await call(env,'/admin/volunteers',{method:'POST',cookie,data:{...base,languages}})).status,400);
