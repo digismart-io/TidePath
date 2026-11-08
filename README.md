@@ -15,7 +15,7 @@ TidePath is a program management app demonstrated with **Tidepath Family Allianc
 | Program management need | App feature |
 | --- | --- |
 | Retyping family signups across lists | One family form, multiple children, connected household and enrollment records |
-| The same guardian appears under different names | CSV preview suggests possible matches; a manager confirms identities before import |
+| The same guardian appears under different names | CSV preview prepares clearly new families and children automatically; managers review only possible matches |
 | Paper attendance arrives too late | Session leaders mark students on their phones and click **Submit attendance** once |
 | Missed sessions go unnoticed | Two consecutive unexplained absences in the same regular program create an assigned follow-up |
 | Staff see a concern outside the automatic rule | Manual follow-ups with a reason, owner, due date and next action |
@@ -74,7 +74,7 @@ Open `http://localhost:8787`. The local app runs the same Worker handlers agains
 npm run check
 ```
 
-The check includes JavaScript syntax validation and **68 automated tests** covering permissions, attendance submission and concurrency, family registration, follow-up rules, assessments, CSV matching, transaction rollback, repeat imports and report reconciliation. Tests use isolated databases and cover administration, account permissions, migration safety, clean workspace setup and PWA caching boundaries.
+The check includes JavaScript syntax validation and **74 automated tests** covering permissions, attendance submission and concurrency, family registration, follow-up rules, assessments, CSV matching, transaction rollback, repeat imports and report reconciliation. Tests use isolated databases and cover administration, account permissions, migration safety, clean workspace setup and PWA caching boundaries.
 
 GitHub Actions runs the same checks on Node 22.13.1 and Node 24 for pushes and pull requests. Both are required before merging to this repository’s `main`. Fork maintainers should configure their own branch protection.
 
@@ -108,7 +108,7 @@ Follow the [deployment guide](docs/DEPLOYMENT.md). It covers local credentials, 
 - **A suitable device is available at the session.** The nonprofit ensures that the person taking attendance can use a phone or a provided tablet. We do not assume that every staff member or volunteer owns a compatible phone; shared devices need staff sign-in and sign-out.
 - **Connectivity is available when submitting.** The PWA can open a cached application shell, but attendance and other records require a network connection. It does not queue offline attendance or claim unsent work has synchronized. A device/connectivity fallback remains an operational responsibility.
 - **Someone records attendance promptly.** An assigned session leader marks everyone and submits once. Missing attendance is not treated as student absence. In-app reminders highlight delayed work, but people remain responsible for completing it.
-- **Identity matches need human confirmation.** Shared names, phone numbers or emails are clues. Staff verify ambiguous family matches; the app does not infer a person's language or automatically merge identities.
+- **Identity matches need human confirmation.** Clearly new CSV rows are prepared automatically, including matching siblings within the same file. Shared names, phone numbers or emails trigger review before linking to an existing family. The app never merges existing identities automatically or infers language from a name.
 - **Follow-up rules reflect an agreed policy.** The demo uses two consecutive unexplained absences within one regular program. Optional events are excluded; managers can raise manual concerns when the automatic rule does not fit.
 - **Self-assessments are voluntary, non-clinical feedback.** Staff use the program's actual question and scale. Missing responses stay visible; score changes are descriptive and are not proof of impact.
 - **Staff own decisions and review AI wording.** AI drafts text, while code validates records and calculates numbers. Generated messages and narrative notes need human review.
