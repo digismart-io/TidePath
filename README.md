@@ -76,6 +76,8 @@ npm run check
 
 The check includes JavaScript syntax validation and **68 automated tests** covering permissions, attendance submission and concurrency, family registration, follow-up rules, assessments, CSV matching, transaction rollback, repeat imports and report reconciliation. Tests use isolated databases and cover administration, account permissions, migration safety, clean workspace setup and PWA caching boundaries.
 
+GitHub Actions runs the same checks on Node 22.13.1 and Node 24 for pushes and pull requests. Both are required before merging to this repository’s `main`. Fork maintainers should configure their own branch protection.
+
 ## Adapt it to another nonprofit
 
 Managers use **Manage workspace** to create, edit or archive programs, groups, volunteers and staff accounts; assign session leaders to groups; schedule sessions; and change the organization name, service areas and reporting dates. Program profiles include age ranges, schedules, descriptions, outcomes and intake policies. Mentor matches support any mentoring program. Historical records remain available when an item is archived. Staff access changes revoke existing sessions; passwords and hashes are excluded from audit payloads.
