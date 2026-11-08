@@ -5,7 +5,7 @@ import worker, { report, reconcileFollowups } from '../src/worker.js';
 import { openDatabase } from '../scripts/sqlite.mjs';
 import { generateSeed, DEMO_PASSWORD } from '../scripts/generate-seed.mjs';
 const fixture=generateSeed();
-function setup(t){const local=openDatabase();for(const file of readdirSync(new URL('../migrations/',import.meta.url)).filter(f=>f.endsWith('.sql')).sort())local.sqlite.exec(readFileSync(new URL('../migrations/'+file,import.meta.url),'utf8'));local.sqlite.exec(fixture.sql);t.after(()=>local.close());const env={DB:local.DB,DEMO_MODE:'true',ASSETS:{fetch:async()=>new Response('shell')}};return {...local,env};}
+function setup(t,{assessments=false}={}){const local=openDatabase();for(const file of readdirSync(new URL('../migrations/',import.meta.url)).filter(f=>f.endsWith('.sql')).sort())local.sqlite.exec(readFileSync(new URL('../migrations/'+file,import.meta.url),'utf8'));local.sqlite.exec(fixture.sql);if(assessments)local.sqlite.exec("UPDATE programs SET details=json_set(details,'$.assessments_enabled',json('true')) WHERE json_extract(details,'$.attendance_rule')='consecutive_absences'");t.after(()=>local.close());const env={DB:local.DB,DEMO_MODE:'true',ASSETS:{fetch:async()=>new Response('shell')}};return {...local,env};}
 async function call(env,path,{method='GET',data,cookie,origin}={}){const req=new Request('http://tidepath.test/api'+path,{method,headers:{...(data?{'Content-Type':'application/json'}:{}),...(cookie?{Cookie:cookie}:{}),...(origin?{Origin:origin}:{})},...(data?{body:JSON.stringify(data)}:{})});const response=await worker.fetch(req,env);return {status:response.status,data:await response.json(),cookie:response.headers.get('set-cookie')?.split(';')[0],headers:response.headers};}
 async function login(env,id='marisol'){const result=await call(env,'/login',{method:'POST',data:{email:`${id}@tidepath.example`,password:DEMO_PASSWORD}});assert.equal(result.status,200);return result.cookie;}
 
@@ -86,7 +86,7 @@ test('a manager can create an owned manual concern without waiting for an absenc
  assert.equal((await call(env,'/followups',{method:'POST',cookie,data:{...data,student_id:'student-002',due_date:'invalid'}})).status,400);
 });
 test('new outcome entry completes a real assessment pair and corrections require current values and confirmation',async t=>{
- const {env,DB,sqlite}=setup(t),cookie=await login(env),start=sqlite.prepare("SELECT a.* FROM assessments a WHERE a.phase='start' AND NOT EXISTS(SELECT 1 FROM assessments e WHERE e.student_id=a.student_id AND e.program_id=a.program_id AND e.phase='end') LIMIT 1").get(),before=await report(DB);
+ const {env,DB,sqlite}=setup(t,{assessments:true}),cookie=await login(env),start=sqlite.prepare("SELECT a.* FROM assessments a WHERE a.phase='start' AND NOT EXISTS(SELECT 1 FROM assessments e WHERE e.student_id=a.student_id AND e.program_id=a.program_id AND e.phase='end') LIMIT 1").get(),before=await report(DB);
  const data={student_id:start.student_id,program_id:start.program_id,phase:'end',score:4,recorded_at:'2026-09-24',expected:''};
  assert.equal((await call(env,'/assessments',{method:'POST',cookie,data})).status,201);
  const after=await report(DB);assert.equal(after.totals.assessment_pairs,before.totals.assessment_pairs+1);assert.equal(after.totals.assessment_missing_end,before.totals.assessment_missing_end-1);
@@ -95,7 +95,7 @@ test('new outcome entry completes a real assessment pair and corrections require
  assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM audit_log WHERE action='assessment_saved'").get().n,2);
 });
 test('assessment entry validates enrollment, scale, baseline and chronology without clinical intake',async t=>{
- const {env}=setup(t),cookie=await login(env),base={student_id:'student-001',program_id:'harbor',phase:'end',score:4,recorded_at:'2026-09-24',expected:''};
+ const {env}=setup(t,{assessments:true}),cookie=await login(env),base={student_id:'student-001',program_id:'harbor',phase:'end',score:4,recorded_at:'2026-09-24',expected:''};
  for(const data of [{...base,score:6},{...base,score:''},{...base,recorded_at:'2026-10-01'},{...base,program_id:'compass'},{...base,program_id:'together'},{...base,recorded_at:'2026-07-01'}])assert.equal((await call(env,'/assessments',{method:'POST',cookie,data})).status,400);
 });
 const intakeHeaders='source_system,source_id,guardian_name,email,language,neighborhood,first_name,last_name,age,group_id,phone';
@@ -179,7 +179,7 @@ test('failed contact auditing rolls back the guardian change and matching anothe
 });
 
 test('weekly brief groups families and exposes owned attendance, contact, assessment and contribution actions',async t=>{
- const {env,sqlite}=setup(t),cookie=await login(env),result=await call(env,'/state',{cookie}),b=result.data.brief;
+ const {env,sqlite}=setup(t,{assessments:true}),cookie=await login(env),result=await call(env,'/state',{cookie}),b=result.data.brief;
  assert.equal(b.as_of,'2026-09-24');assert.equal(b.week_end,'2026-09-30');assert.equal(b.counts.families_to_contact,2);assert.equal(b.counts.overdue_followups,2);assert.equal(b.counts.overdue_sessions,1);assert.equal(b.counts.missing_assessments,5);assert.equal(b.counts.pending_hours,17);
  assert.ok(b.attendance.every(s=>s.owner_id&&s.owner_name&&s.href.startsWith('#attendance?session=')));assert.ok(b.contacts.every(f=>f.owner_id&&f.next_action));assert.ok(b.missing_assessments.every(a=>a.student_id&&a.program_id));
  const sibling=sqlite.prepare("SELECT student_id FROM student_guardians WHERE guardian_id='guardian-001' AND student_id!='student-001'").get().student_id;const data={student_id:sibling,program_id:'harbor',reason:'Sibling check-in',next_action:'Call shared guardian',due_date:'2026-09-25'};
@@ -196,7 +196,7 @@ test('daily and manual checks persist idempotent reminders and resolve them when
 });
 async function closePreview(env,cookie){const response=await call(env,'/quarter/close',{cookie});assert.equal(response.status,200,JSON.stringify(response.data));return response.data;}
 test('quarter checklist is provisional before period end and saving requires review and disclosure of gaps',async t=>{
- const {env,sqlite}=setup(t),cookie=await login(env),preview=await closePreview(env,cookie),data={expected:preview.fingerprint,reviewed:true,notes:'Fictional rehearsal: attendance, contribution approvals and voluntary responses remain incomplete. Open family tasks continue.'};
+ const {env,sqlite}=setup(t,{assessments:true}),cookie=await login(env),preview=await closePreview(env,cookie),data={expected:preview.fingerprint,reviewed:true,notes:'Fictional rehearsal: attendance, contribution approvals and voluntary responses remain incomplete. Open family tasks continue.'};
  assert.equal(preview.readiness.period_complete,false);assert.equal(preview.readiness.gaps.unsubmitted_sessions,2);assert.equal(preview.readiness.gaps.missing_assessments,5);
  assert.equal((await call(env,'/quarter/snapshots',{method:'POST',cookie,data:{...data,reviewed:false}})).status,400);assert.equal((await call(env,'/quarter/snapshots',{method:'POST',cookie,data:{...data,notes:''}})).status,400);
  const saved=await call(env,'/quarter/snapshots',{method:'POST',cookie,data});assert.equal(saved.status,201,JSON.stringify(saved.data));assert.equal(saved.data.status,'provisional');const frozen=(await call(env,'/quarter/snapshots/'+saved.data.id,{cookie})).data;
@@ -225,7 +225,7 @@ test('quarter archive and reminder controls require manager access and state rem
  const cookie=await login(env);let queries=0;env.DB={...DB,prepare(sql){queries++;return DB.prepare(sql);}};assert.equal((await call(env,'/state',{cookie})).status,200);assert.ok(queries<50,`manager state used ${queries} queries`);
 });
 test('new regular-program enrollments appear as missing start feedback while optional events do not',async t=>{
- const {env}=setup(t),cookie=await login(env),data={first_name:'New',last_name:'Feedback Demo',age:12,guardian_name:'Demo Guardian',email:'feedback-demo@example.com',language:'English',neighborhood:'Little Havana',group_ids:['wave-bayview','together-havana']};
+ const {env}=setup(t,{assessments:true}),cookie=await login(env),data={first_name:'New',last_name:'Feedback Demo',age:12,guardian_name:'Demo Guardian',email:'feedback-demo@example.com',language:'English',neighborhood:'Little Havana',group_ids:['wave-bayview','together-havana']};
  assert.equal((await call(env,'/register',{method:'POST',data})).status,201);
  const brief=(await call(env,'/state',{cookie})).data.brief,missing=brief.missing_assessments.filter(a=>a.name==='New Feedback Demo');assert.equal(missing.length,1);assert.equal(missing[0].program_id,'nextwave');assert.equal(missing[0].phase,'start');assert.equal(brief.counts.missing_starts,1);
  const preview=await closePreview(env,cookie);assert.equal(preview.readiness.gaps.missing_starts,1);assert.match(preview.narrative,/1 missing start assessments/);
@@ -353,4 +353,61 @@ test('unknown roles fail closed even if a future schema or external write introd
  const {env,sqlite}=setup(t),teacher=await login(env,'elena');sqlite.exec('PRAGMA ignore_check_constraints=ON');sqlite.prepare("UPDATE staff SET role='observer' WHERE id='elena'").run();sqlite.exec('PRAGMA ignore_check_constraints=OFF');
  for(const path of ['/state','/sessions/harbor-bayview-12','/admin'])assert.equal((await call(env,path,{cookie:teacher})).status,401);
  assert.equal((await call(env,'/login',{method:'POST',data:{email:'elena@tidepath.example',password:DEMO_PASSWORD}})).status,401);
+});
+
+
+async function assessmentSetting(env,cookie,id,enabled,extra={}){
+ const p=(await adminState(env,cookie)).programs.find(p=>p.id===id),d=JSON.parse(p.details);
+ return call(env,'/admin/programs/'+id,{method:'PUT',cookie,data:{...p,enrollment_mode:d.enrollment_mode,attendance_rule:d.attendance_rule,active:Boolean(p.active),details:d,assessments_enabled:enabled,...extra}});
+}
+test('assessments default off without losing historical scores or adding missing-response work',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env),before=sqlite.prepare('SELECT * FROM assessments ORDER BY student_id,program_id,phase').all();
+ const state=(await call(env,'/state',{cookie})).data;
+ assert.equal(state.brief.counts.missing_assessments,0);assert.deepEqual(state.brief.missing_assessments,[]);
+ const preview=await closePreview(env,cookie);assert.equal(preview.readiness.gaps.missing_assessments,0);
+ assert.ok(preview.report.feedback.length>0);assert.ok(preview.report.feedback.every(p=>!p.enabled&&p.missing_end===0));
+ assert.match(preview.narrative,/historical; assessments off/);assert.ok(preview.report.source_records.assessments.length);
+ const record=before.find(a=>a.phase==='start');
+ const rejected=await call(env,'/assessments',{method:'POST',cookie,data:{...record,expected:JSON.stringify([record.score,record.recorded_at]),replace:true,score:5}});
+ assert.equal(rejected.status,400);assert.deepEqual(sqlite.prepare('SELECT * FROM assessments ORDER BY student_id,program_id,phase').all(),before);
+ assert.ok((await call(env,'/students/'+record.student_id,{cookie})).data.assessments.length);
+});
+test('assessment opt-in is reversible per program and keeps saved reports and operational records intact',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env);
+ const before=sqlite.prepare('SELECT * FROM assessments ORDER BY student_id,program_id,phase').all();
+ assert.equal((await assessmentSetting(env,cookie,'harbor',true)).status,200);
+ let preview=await closePreview(env,cookie);assert.ok(preview.readiness.missing_assessments.length);assert.ok(preview.readiness.missing_assessments.every(a=>a.program_id==='harbor'));
+ const saved=await call(env,'/quarter/snapshots',{method:'POST',cookie,data:{expected:preview.fingerprint,reviewed:true,notes:'Test gaps disclosed.'}});assert.equal(saved.status,201);
+ const snapshot=(await call(env,'/quarter/snapshots/'+saved.data.id,{cookie})).data;
+ const operational=Object.fromEntries(['students','enrollments','attendance','followups','mentor_matches','volunteer_hours'].map(table=>[table,sqlite.prepare('SELECT * FROM '+table).all()]));
+ assert.equal((await assessmentSetting(env,cookie,'harbor',false)).status,200);
+ preview=await closePreview(env,cookie);assert.equal(preview.readiness.gaps.missing_assessments,0);
+ assert.deepEqual(sqlite.prepare('SELECT * FROM assessments ORDER BY student_id,program_id,phase').all(),before);
+ assert.deepEqual((await call(env,'/quarter/snapshots/'+saved.data.id,{cookie})).data,snapshot);
+ for(const [table,rows] of Object.entries(operational))assert.deepEqual(sqlite.prepare('SELECT * FROM '+table).all(),rows);
+ assert.equal((await assessmentSetting(env,cookie,'harbor',true)).status,200);assert.ok((await closePreview(env,cookie)).readiness.missing_assessments.length);
+ assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM audit_log WHERE action='workspace_programs_saved'").get().n,3);
+});
+test('new programs need no score measure unless opted in and invalid or unauthorized settings leave records intact',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env),id=await createProgram(env,cookie,{...newProgram,outcome_label:''});
+ assert.equal(JSON.parse(sqlite.prepare('SELECT details FROM programs WHERE id=?').get(id).details).assessments_enabled,false);
+ assert.equal((await assessmentSetting(env,cookie,id,true)).status,400);
+ assert.equal((await assessmentSetting(env,cookie,id,'yes')).status,400);
+ assert.equal((await assessmentSetting(env,cookie,'together',true)).status,400);
+ assert.equal((await assessmentSetting(env,cookie,'compass',true)).status,400);
+ assert.equal((await assessmentSetting(env,cookie,id,true,{outcome_label:'Agreed confidence question'})).status,200);
+ const before=sqlite.prepare('SELECT * FROM programs ORDER BY id').all(),audits=sqlite.prepare('SELECT COUNT(*) n FROM audit_log').get().n;
+ const teacher=await login(env,'elena'),data={...newProgram,assessments_enabled:true};
+ assert.equal((await call(env,'/admin/programs/harbor',{method:'PUT',data})).status,401);
+ assert.equal((await call(env,'/admin/programs/harbor',{method:'PUT',cookie:teacher,data})).status,403);
+ assert.deepEqual(sqlite.prepare('SELECT * FROM programs ORDER BY id').all(),before);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM audit_log').get().n,audits);
+});
+test('live and saved feedback summaries separate program averages and never substitute zero for no paired responses',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env);
+ for(const id of ['harbor','nextwave','brightminds'])assert.equal((await assessmentSetting(env,cookie,id,true)).status,200);
+ sqlite.exec("UPDATE assessments SET score=CASE WHEN phase='start' THEN 1 ELSE 5 END WHERE program_id='harbor'; UPDATE assessments SET score=CASE WHEN phase='start' THEN 5 ELSE 1 END WHERE program_id='nextwave'; DELETE FROM assessments WHERE program_id='brightminds';");
+ const preview=await closePreview(env,cookie),feedback=preview.report.feedback;
+ assert.equal(feedback.find(p=>p.program_id==='harbor').average_gain,4);assert.equal(feedback.find(p=>p.program_id==='nextwave').average_gain,-4);assert.equal(feedback.find(p=>p.program_id==='brightminds').average_gain,null);
+ assert.match(preview.narrative,/average change 4.00 points/);assert.match(preview.narrative,/average change -4.00 points/);assert.match(preview.narrative,/average change not available/);
+ const draft=await call(env,'/report/draft',{method:'POST',cookie,data:{}});assert.match(draft.data.text,/average change 4.00 points/);assert.match(draft.data.text,/average change -4.00 points/);
 });
