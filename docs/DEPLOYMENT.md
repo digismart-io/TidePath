@@ -38,16 +38,16 @@ npm run check
 2. Create a dedicated database for this copy.
 
    ```sh
-   npx wrangler d1 create tidepath-demo
+   npx wrangler d1 create your-nonprofit
    ```
 
 3. Copy `wrangler.example.jsonc` to `wrangler.jsonc` for a new deployment, then edit it. Replace `d1_databases[0].database_id` with the ID returned above. If you choose a different database name, update that field and the commands below consistently. Choose an available Worker `name`; retain the `DB` and `ASSETS` binding names because the code uses them. If Wrangler asks you to choose an account, select the account containing the new database.
 
-4. Apply all schema migrations, then load the fictional seed into the **new, empty** database.
+4. For a fictional demo, set `vars.DEMO_MODE` to `"true"`, apply all schema migrations, then load the fictional seed into the **new, empty** database. For a real empty workspace, keep the template’s `"false"` setting and follow [WORKSPACE.md](WORKSPACE.md) instead of loading seed records.
 
    ```sh
-   npx wrangler d1 migrations apply tidepath-demo --remote
-   npx wrangler d1 execute tidepath-demo --remote --file seed/demo.sql
+   npx wrangler d1 migrations apply your-nonprofit --remote
+   npx wrangler d1 execute your-nonprofit --remote --file seed/demo.sql
    ```
 
    Seeding inserts records and is not an update operation. Do not rerun it against populated data. Migration `0003_import_records.sql` adds CSV tracking; `0004_operations_and_snapshots.sql` adds in-app reminders, check history and protected report snapshots.
