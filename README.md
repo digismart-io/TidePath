@@ -20,6 +20,8 @@ TidePath connects family registration, attendance, mentors, volunteer hours, fam
 | Mentor lists and volunteer hours are separate | Mentor assignment history and approved volunteer contributions share the same records |
 | Quarter-end numbers do not agree | Computed metrics, source-record drill-down, assessment entry, narrative drafting and printable reports |
 
+The opening **“Marisol, here’s your week”** brief links families needing contact, attendance to finish, missing end responses and pending volunteer hours to their next actions and owners. A daily check refreshes in-app reminders. **Close the quarter** guides review and saves a dated, frozen report version with evidence and disclosed gaps.
+
 Each participant’s **Why a follow-up?** section explains their submitted attendance, unsubmitted sessions and existing tasks. No manager approval is needed for attendance: submission immediately updates follow-up rules and report totals. Optional family events do not trigger absence alerts.
 
 <details>
@@ -68,7 +70,7 @@ Open `http://localhost:8787`. The local app runs the same Worker handlers agains
 npm run check
 ```
 
-The check includes JavaScript syntax validation and **44 integration tests** covering permissions, attendance submission and concurrency, family registration, follow-up rules, assessments, CSV matching, transaction rollback, repeat imports and report reconciliation. Tests use isolated in-memory databases.
+The check includes JavaScript syntax validation and **52 integration tests** covering permissions, attendance submission and concurrency, family registration, follow-up rules, assessments, CSV matching, transaction rollback, repeat imports and report reconciliation. Tests use isolated in-memory databases.
 
 ## Architecture and AI
 
@@ -87,9 +89,9 @@ Follow the [deployment guide](docs/DEPLOYMENT.md). It covers local credentials, 
 ## Limits of this prototype
 
 - CSV imports cover signups and enrollment: 20 rows / 20 KB per batch, with explicit identity review. There is no direct Google Sheets sync, historical attendance import or destructive merge of existing database profiles.
-- Contacts are simulated. The queue tracks owners and overdue tasks, but there is no outbound email/SMS/WhatsApp delivery or scheduled reminder/escalation service.
+- Contacts are simulated. The queue tracks owners and overdue tasks, but daily checks refresh assigned in-app reminders, but there is no outbound email/SMS/WhatsApp delivery.
 - The PWA has an offline shell; attendance requires connectivity and does not synchronize offline.
-- Reports use the configured demo quarter and current records. Immutable issued reports and a quarter-selection workflow are not implemented.
+- Reports use the configured demo quarter and current records. Saved report versions freeze evidence and disclosures; a general quarter-selection workflow is not implemented.
 - Assessments are voluntary, non-clinical program feedback. Descriptive changes do not establish program effectiveness. Counseling, donor and financial records remain in their existing systems.
 - Demo roles and public passwords must be replaced before a real-data pilot. Enrollment/waitlist policy, concurrent capacity enforcement, translation review, retention and organizational access provisioning remain production work.
 

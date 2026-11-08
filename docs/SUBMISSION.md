@@ -16,9 +16,9 @@ TidePath provides a working, connected program workspace: family signup becomes 
 | Reconcile inconsistent signup lists | A CSV preview finds possible identity matches; a manager confirms them before an atomic import |
 | Replace delayed paper attendance | An assigned session leader records everyone’s status and submits once, with no approval stage |
 | Identify children needing contact | Consecutive program absences create an assigned task; explanations and manual concerns cover staff judgment |
-| Track who follows through | Owner, due date, next action, contact history and explicit resolution stay attached to the concern |
+| Track who follows through | A weekly action brief and daily in-app check surface missing attendance and overdue concerns with owners and direct actions |
 | Connect mentors and contributions | Mentor assignment history and approved volunteer hours appear in the same workspace |
-| Prepare an outcome report | Staff enter start/end self-assessments; computed figures and source evidence support a printable report and reviewed narrative |
+| Prepare an outcome report | Staff enter self-assessments, review a close checklist and save a dated report version with frozen evidence and disclosed gaps |
 
 ## A short demonstration
 
@@ -26,7 +26,7 @@ TidePath provides a working, connected program workspace: family signup becomes 
 2. Sign in as **Elena**. Only her assigned Harbor sessions are visible. In a fresh local seed, open September 22, mark remaining students present, mark Sofia Rivera absent, and submit attendance. Her consecutive mentoring absences create an assigned follow-up immediately.
 3. Return as **Marisol**. Open the task, inspect the supporting history, request a Spanish guardian-message draft and record a simulated contact. Explain that outreach is simulated and resolution remains a separate staff decision.
 4. Open **Amelia Thompson → Record assessment**. In a fresh seed, add her missing Harbor end response. The report’s paired-response and missing-response figures change from saved evidence.
-5. Open **Reports**. Drill into a figure, generate the narrative and print or download the evidence. Explain the unfinished records and provisional quarter.
+5. Open **Marisol’s week**, run the check and show the assigned unfinished work. Choose **Close the quarter**, review its checklist, disclose remaining gaps and save a dated snapshot. Open saved evidence or download/print the version. Before September 30 the snapshot is correctly labeled provisional.
 
 Use the [rehearsal guide](TEST-GUIDE.md) for exact fresh-seed totals, test accounts and reset instructions. The shared live demo may have additional activity from testing. Demo writes are real writes to fictional records.
 
@@ -42,12 +42,12 @@ Cloudflare Workers AI hosts Meta Llama 3.3 70B Instruct. It drafts message wordi
 
 ## Validation and current limits
 
-The repository includes 44 passing integration tests for permissions, record linkage, attendance completeness and concurrency, follow-up behavior, assessments, CSV identity review, rollback, repeat imports and report calculations. Local browser rehearsals exercised successful writes without adding test data to the live deployment.
+The repository includes 52 passing integration tests for permissions, record linkage, attendance completeness and concurrency, follow-up behavior, assessments, CSV identity review, rollback, repeat imports and report calculations. Local browser rehearsals exercised successful writes without adding test data to the live deployment.
 
-The prototype demonstrates the workflow; it does not yet establish measured time savings or guarantee that every family receives timely contact. There is no live spreadsheet synchronization, scheduled escalation, real outbound messaging, offline attendance synchronization, historical attendance import or immutable issued-report archive. CSV review links new source rows to confirmed identities; it does not destructively merge existing profiles. Reports use the configured demo quarter.
+The prototype demonstrates the workflow; it does not yet establish measured time savings or guarantee that every family receives timely contact. There is no live spreadsheet synchronization, real outbound messaging, offline attendance synchronization or historical attendance import. CSV review links new source rows to confirmed identities; it does not destructively merge existing profiles. Reports use the configured demo quarter.
 
 All participant records, program designs, schools, contact histories and assessment scores are fictional. The 100-child seed is a demonstration subset of the organization’s supplied scale. Counseling is catalog-only; clinical, donor and financial records remain outside this app. [Full source brief and boundaries](PROJECT-BRIEF.md)
 
 ## Next steps after the hackathon
 
-Priorities for a real pilot are organizational sign-in and role provisioning; agreed enrollment, capacity and retention policies; translation review; reliable reminders/escalation and approved delivery integrations; and a quarterly close-and-issue workflow. Measure staff time and follow-up completion during a pilot before claiming operational improvements.
+Priorities for a real pilot are organizational sign-in and role provisioning; agreed enrollment, capacity and retention policies; translation review; approved outbound delivery integrations and escalation policies. Measure staff time and follow-up completion during a pilot before claiming operational improvements.

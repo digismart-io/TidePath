@@ -9,7 +9,7 @@
     "demo:reset:remote": "node scripts/reset-remote.mjs",
     "seed:generate": "node scripts/generate-seed.mjs",
     "test": "node --test tests/*.test.mjs",
-    "check": "node --check src/worker.js && node --check src/imports.js && node --check public/app.js && npm test",
+    "check": "node --check src/worker.js && node --check src/imports.js && node --check src/operations.js && node --check public/app.js && npm test",
     "deploy": "wrangler deploy",
     "cf:dev": "wrangler dev",
     "cf:seed:local": "wrangler d1 migrations apply tidepath-demo --local && wrangler d1 execute tidepath-demo --local --file seed/demo.sql"

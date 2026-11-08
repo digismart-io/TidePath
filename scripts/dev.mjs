@@ -7,7 +7,7 @@ import { openDatabase } from './sqlite.mjs';
 if(!existsSync('.local/tidepath.sqlite'))await import('./reset.mjs');
 const {DB,sqlite,close}=openDatabase('.local/tidepath.sqlite');
 // Additive schema update for checkouts with an existing local demo database.
-sqlite.exec(await readFile(new URL('../migrations/0003_import_records.sql',import.meta.url),'utf8'));
+for(const migration of ['0003_import_records.sql','0004_operations_and_snapshots.sql'])sqlite.exec(await readFile(new URL('../migrations/'+migration,import.meta.url),'utf8'));
 const root=resolve('public');
 const types={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.json':'application/json','.webmanifest':'application/manifest+json','.svg':'image/svg+xml','.jpg':'image/jpeg','.png':'image/png'};
 const env={DB,DEMO_MODE:'true',ASSETS:{async fetch(request){

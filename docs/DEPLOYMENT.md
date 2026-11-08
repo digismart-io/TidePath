@@ -50,7 +50,7 @@ npm run check
    npx wrangler d1 execute tidepath-demo --remote --file seed/demo.sql
    ```
 
-   Seeding inserts records and is not an update operation. Do not rerun it against populated data. Migration `0003_import_records.sql` adds tracking for reviewed CSV imports.
+   Seeding inserts records and is not an update operation. Do not rerun it against populated data. Migration `0003_import_records.sql` adds CSV tracking; `0004_operations_and_snapshots.sql` adds in-app reminders, check history and protected report snapshots.
 
 5. Deploy.
 
@@ -93,6 +93,10 @@ npm run deploy
 
 Retain the intended existing database ID. Apply pending migrations; **do not seed or reset** an active demo just to deploy code. Review schema changes before applying them. Static Programs changes are published by the configured Pages branch separately.
 
+## Daily in-app check
+
+`wrangler.jsonc` configures `0 13 * * *` (13:00 UTC daily). Deployment installs the Cloudflare Cron Trigger. In demo mode, it evaluates work against the fixed scenario date; it does not age the fictional quarter using the real calendar. Managers can run the same check immediately from Overview. Local Node development does not run a timer. Check history is visible in the weekly brief. This check refreshes in-app reminders only. [Cron Trigger documentation](https://developers.cloudflare.com/workers/configuration/cron-triggers/)
+
 ## Resets
 
 For local rehearsal, stop the server, run `npm run db:reset`, and restart it. That command replaces the local fictional database only.
@@ -103,4 +107,4 @@ The repository also contains a guarded remote reset for the original disposable 
 npm run demo:reset:remote -- --confirm=tidepath-demo
 ```
 
-It deletes demo activity and sessions before restoring the seed. It is restricted to the original database ID and refuses a fork’s different ID. It is not a deployment step or a general reset tool for other accounts.
+It deletes demo activity, saved report versions, reminders and sessions before restoring the seed. The guarded reset temporarily removes the snapshot-delete protection and reinstalls it afterward. It is restricted to the original database ID and refuses a fork’s different ID. It is not a deployment step or a general reset tool for other accounts.

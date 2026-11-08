@@ -290,3 +290,25 @@ dialog{border:0;border-radius:var(--radius-md)}
 #import-preview{margin-top:24px}
 #import-preview .import-row select{max-width:100%}
 [data-page="import"] code{overflow-wrap:anywhere;white-space:normal}
+
+.weekly-summary{background:var(--color-highlight);color:var(--color-ink);padding:26px 30px;border-radius:16px;margin-bottom:24px}
+.weekly-summary .eyebrow{color:var(--color-ink);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:.8rem;margin-bottom:12px}
+.brief-lead{font-family:var(--font-display);font-size:clamp(1.35rem,2.2vw,1.8rem);line-height:1.4;max-width:48ch;margin-bottom:16px}
+.weekly-summary .small{color:var(--color-muted);max-width:80ch}
+.brief-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.brief-grid .panel{min-width:0}
+.brief-item{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 0;border-bottom:1px solid var(--color-rule)}
+.brief-item:last-child{border-bottom:0}
+.brief-item>div{min-width:0}
+.brief-item p{margin:5px 0;overflow-wrap:anywhere}
+.brief-item .btn{flex-shrink:0;white-space:nowrap}
+.close-check{border-bottom:1px solid var(--color-rule);padding:16px 0}
+.close-check summary{font-family:var(--font-display);font-size:1.15rem;font-weight:700;cursor:pointer}
+.close-check>p{margin:16px 0}
+@media(max-width:1000px){.brief-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){.weekly-summary{padding:22px}.brief-item{align-items:flex-start;flex-direction:column}.brief-grid{gap:18px}}
+@media print{.weekly-summary{background:white;color:black}.weekly-summary .small,.weekly-summary .eyebrow{color:black}.brief-grid{display:block}}
+
+.snapshot-metrics{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:1100px){.snapshot-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.snapshot-metrics{grid-template-columns:minmax(0,1fr)}}

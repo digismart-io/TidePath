@@ -92,3 +92,17 @@ CSV import covers signup and program enrollment only. It does not fetch Google S
 As Marisol, open **Participants → a child → Edit contact details** under the guardian. The form lists every child sharing that guardian. Update the guardian name, email, optional phone or preferred language and save. All linked children and future message drafts use the updated shared record. Cancelling leaves the original details unchanged. Previous and new values are recorded with the staff member and time in the audit log. A conflicting edit asks you to reopen the form instead of silently overwriting it. Session leaders and unauthenticated users cannot read or update this endpoint.
 
 For local rehearsal, open Sofia Rivera, edit Rosa Rivera’s invented email/phone, save, then open Mateo Rivera to verify the same details. This changes no household or child links. CSV import still preserves canonical contact details; use this explicit edit action to correct an existing profile.
+
+## Marisol’s week and daily reminders
+
+Overview opens the seven-day action brief. On a fresh seed: two families need contact, two sessions need attendance (one overdue), two family tasks are overdue, zero start responses and five end responses are missing, and 13 contribution entries totaling 17 hours await review. Each action shows its owner and opens the corresponding attendance, concern, assessment form or approval queue. Newly enrolled regular-program children without a baseline appear as missing start responses; optional events do not require assessments.
+
+Click **Run weekly check**. The check records its execution and refreshes three in-app reminders in the fresh seed (one overdue session and two overdue follow-ups). Repeating it does not duplicate reminders. Completing the underlying work and checking again resolves the reminder. Hosted Cron runs the same routine daily at 13:00 UTC. The local server requires the button; it has no scheduler. Demo checks use September 24, not the actual wall-clock day. No external message is sent.
+
+## Close the quarter and reopen a frozen version
+
+Open **Close the quarter** from Overview or Reports. Expand the four checklist categories and follow their direct actions. Refresh the checklist after changes. Enter a disclosure for unresolved work, confirm review and save. The September 24 seed saves a **Provisional snapshot** because the quarter ends September 30. Open a metric to inspect saved evidence, download JSON or print the report. Return to the checklist to find the saved archive.
+
+Saved totals, source records and notes remain unchanged after live records are corrected. The API rejects stale review fingerprints; identical retries return the same saved version. At quarter end, complete records produce an **Issued report**; remaining disclosed gaps produce **Issued with disclosed gaps**. Automated tests exercise both quarter-end states without changing the shared demo clock. Saving does not resolve family concerns or approve hours.
+
+For the video, finish with a dated saved report and its disclosed limits. Do not present a September 24 provisional snapshot as a completed September 30 report. The remote disposable-demo reset intentionally clears saved report versions as well as other rehearsal activity.

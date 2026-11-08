@@ -39,7 +39,7 @@ Households are separate from guardians. Contact language is explicit. The staff 
 
 ## Demonstration clock
 
-The active quarter is July–September 2026. The application uses September 24, 2026 as its scenario date so missed-session tasks and incomplete rosters are repeatable. Report generation and audit timestamps use the actual server time. Reports are provisional and reflect current records; immutable issued-report versioning is future work.
+The active quarter is July–September 2026. The application uses September 24, 2026 as its scenario date so missed-session tasks and incomplete rosters are repeatable. Report generation and audit timestamps use the actual server time. Live reports reflect current records. Quarter close saves dated versions with frozen evidence and disclosed gaps; before September 30 those versions remain provisional. Daily in-app checks use the fixed scenario date in demo mode.
 
 ## Fictional family profiles
 

@@ -177,3 +177,56 @@ test('failed contact auditing rolls back the guardian change and matching anothe
  assert.equal((await call(env,'/guardians/guardian-001',{method:'PUT',cookie,data})).status,500);assert.equal(sqlite.prepare("SELECT email FROM guardians WHERE id='guardian-001'").get().email,detail.guardian.email);
  sqlite.exec('DROP TRIGGER fail_contact_audit');assert.equal((await call(env,'/guardians/guardian-001',{method:'PUT',cookie,data})).status,200);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM households').get().n,70);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM guardians').get().n,70);assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM student_guardians WHERE guardian_id='guardian-001'").get().n,2);
 });
+
+test('weekly brief groups families and exposes owned attendance, contact, assessment and contribution actions',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env),result=await call(env,'/state',{cookie}),b=result.data.brief;
+ assert.equal(b.as_of,'2026-09-24');assert.equal(b.week_end,'2026-09-30');assert.equal(b.counts.families_to_contact,2);assert.equal(b.counts.overdue_followups,2);assert.equal(b.counts.overdue_sessions,1);assert.equal(b.counts.missing_assessments,5);assert.equal(b.counts.pending_hours,17);
+ assert.ok(b.attendance.every(s=>s.owner_id&&s.owner_name&&s.href.startsWith('#attendance?session=')));assert.ok(b.contacts.every(f=>f.owner_id&&f.next_action));assert.ok(b.missing_assessments.every(a=>a.student_id&&a.program_id));
+ const sibling=sqlite.prepare("SELECT student_id FROM student_guardians WHERE guardian_id='guardian-001' AND student_id!='student-001'").get().student_id;const data={student_id:sibling,program_id:'harbor',reason:'Sibling check-in',next_action:'Call shared guardian',due_date:'2026-09-25'};
+ // Confirm family counting uses household identity rather than the number of children.
+ const before=b.counts.families_to_contact;await call(env,'/followups',{method:'POST',cookie,data:{...data,student_id:'student-001'}});await call(env,'/followups',{method:'POST',cookie,data});const after=(await call(env,'/state',{cookie})).data.brief;assert.equal(after.counts.families_to_contact,before+1);
+});
+test('daily and manual checks persist idempotent reminders and resolve them when source work is completed',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env),contactsBefore=sqlite.prepare('SELECT COUNT(*) n FROM contact_events').get().n;let pending;
+ await worker.scheduled({},env,{waitUntil(p){pending=p;}});await pending;
+ assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM operational_alerts WHERE status='open'").get().n,3);assert.equal(sqlite.prepare("SELECT trigger FROM operations_runs").get().trigger,'scheduled');
+ const result=await call(env,'/operations/check',{method:'POST',cookie,data:{}});assert.equal(result.status,200);assert.equal(result.data.alerts_refreshed,3);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM operational_alerts').get().n,3);
+ sqlite.prepare("UPDATE sessions SET status='submitted' WHERE id='harbor-bayview-12'").run();sqlite.prepare("UPDATE followups SET status='resolved'").run();await call(env,'/operations/check',{method:'POST',cookie,data:{}});
+ assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM operational_alerts WHERE status='open'").get().n,0);assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM operational_alerts WHERE status='resolved'").get().n,3);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM contact_events').get().n,contactsBefore);
+});
+async function closePreview(env,cookie){const response=await call(env,'/quarter/close',{cookie});assert.equal(response.status,200,JSON.stringify(response.data));return response.data;}
+test('quarter checklist is provisional before period end and saving requires review and disclosure of gaps',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env),preview=await closePreview(env,cookie),data={expected:preview.fingerprint,reviewed:true,notes:'Fictional rehearsal: attendance, contribution approvals and voluntary responses remain incomplete. Open family tasks continue.'};
+ assert.equal(preview.readiness.period_complete,false);assert.equal(preview.readiness.gaps.unsubmitted_sessions,2);assert.equal(preview.readiness.gaps.missing_assessments,5);
+ assert.equal((await call(env,'/quarter/snapshots',{method:'POST',cookie,data:{...data,reviewed:false}})).status,400);assert.equal((await call(env,'/quarter/snapshots',{method:'POST',cookie,data:{...data,notes:''}})).status,400);
+ const saved=await call(env,'/quarter/snapshots',{method:'POST',cookie,data});assert.equal(saved.status,201,JSON.stringify(saved.data));assert.equal(saved.data.status,'provisional');const frozen=(await call(env,'/quarter/snapshots/'+saved.data.id,{cookie})).data;
+ assert.equal(frozen.report.totals.students,100);assert.ok(frozen.report.source_records.attendance.length);assert.equal(frozen.notes,data.notes);assert.equal(frozen.saved_by.id,'marisol');assert.match(frozen.narrative,/Disclosed gaps/);
+ const repeat=await call(env,'/quarter/snapshots',{method:'POST',cookie,data});assert.equal(repeat.data.id,saved.data.id);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM report_snapshots').get().n,1);assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM audit_log WHERE action='quarter_snapshot_saved'").get().n,1);
+});
+test('saved evidence remains frozen after live records change, with database update/delete protection',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env),preview=await closePreview(env,cookie),saved=await call(env,'/quarter/snapshots',{method:'POST',cookie,data:{expected:preview.fingerprint,reviewed:true,notes:'Demo gaps disclosed.'}}),id=saved.data.id;
+ const before=(await call(env,'/quarter/snapshots/'+id,{cookie})).data;sqlite.prepare("UPDATE volunteer_hours SET status='approved' WHERE status='pending'").run();sqlite.prepare("UPDATE assessments SET score=5 WHERE phase='end'").run();
+ const after=(await call(env,'/quarter/snapshots/'+id,{cookie})).data;assert.deepEqual(after,before);assert.notEqual((await closePreview(env,cookie)).report.totals.approved_hours,before.report.totals.approved_hours);
+ assert.throws(()=>sqlite.prepare('UPDATE report_snapshots SET notes=? WHERE id=?').run('changed',id),/cannot be changed/);assert.throws(()=>sqlite.prepare('DELETE FROM report_snapshots WHERE id=?').run(id),/cannot be deleted/);
+ assert.equal((await call(env,'/quarter/snapshots/'+id,{method:'PUT',cookie,data:{notes:'changed'}})).status,404);
+});
+test('stale quarter reviews are rejected while routine reminder checks do not invalidate unchanged report evidence',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env),preview=await closePreview(env,cookie);await call(env,'/operations/check',{method:'POST',cookie,data:{}});assert.equal((await closePreview(env,cookie)).fingerprint,preview.fingerprint);
+ sqlite.prepare("UPDATE volunteer_hours SET status='approved' WHERE status='pending'").run();const result=await call(env,'/quarter/snapshots',{method:'POST',cookie,data:{expected:preview.fingerprint,reviewed:true,notes:'Review before data changed'}});assert.equal(result.status,409);assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM report_snapshots').get().n,0);
+});
+test('quarter-end reports distinguish disclosed gaps from a completed checklist',async t=>{
+ const {env,sqlite}=setup(t),cookie=await login(env);sqlite.prepare("UPDATE settings SET value='2026-09-30' WHERE key='demo_today'").run();let preview=await closePreview(env,cookie);
+ let result=await call(env,'/quarter/snapshots',{method:'POST',cookie,data:{expected:preview.fingerprint,reviewed:true,notes:'Some records remain unfinished; totals exclude them.'}});assert.equal(result.data.status,'issued_with_gaps');
+ sqlite.exec("UPDATE attendance SET status='present' WHERE status IS NULL; UPDATE sessions SET status='submitted' WHERE status='draft'; UPDATE volunteer_hours SET status='approved' WHERE status='pending'; UPDATE followups SET status='resolved'; INSERT INTO assessments(student_id,program_id,phase,score,recorded_at) SELECT a.student_id,a.program_id,'end',a.score,'2026-09-30' FROM assessments a WHERE a.phase='start' AND NOT EXISTS(SELECT 1 FROM assessments e WHERE e.student_id=a.student_id AND e.program_id=a.program_id AND e.phase='end');");
+ preview=await closePreview(env,cookie);assert.equal(preview.readiness.gap_count,0);result=await call(env,'/quarter/snapshots',{method:'POST',cookie,data:{expected:preview.fingerprint,reviewed:true,notes:''}});assert.equal(result.data.status,'issued');assert.equal((await call(env,'/quarter/snapshots',{cookie})).data.snapshots.length,2);
+});
+test('quarter archive and reminder controls require manager access and state remains inside the query budget',async t=>{
+ const {env,DB}=setup(t),teacher=await login(env,'elena');for(const [path,method] of [['/quarter/close','GET'],['/quarter/snapshots','GET'],['/quarter/snapshots','POST'],['/operations/check','POST']]){assert.equal((await call(env,path,{method,...(method==='POST'?{data:{}}:{})})).status,401);assert.equal((await call(env,path,{method,cookie:teacher,...(method==='POST'?{data:{}}:{})})).status,403);}
+ const cookie=await login(env);let queries=0;env.DB={...DB,prepare(sql){queries++;return DB.prepare(sql);}};assert.equal((await call(env,'/state',{cookie})).status,200);assert.ok(queries<50,`manager state used ${queries} queries`);
+});
+test('new regular-program enrollments appear as missing start feedback while optional events do not',async t=>{
+ const {env}=setup(t),cookie=await login(env),data={first_name:'New',last_name:'Feedback Demo',age:12,guardian_name:'Demo Guardian',email:'feedback-demo@example.com',language:'English',neighborhood:'Little Havana',group_ids:['wave-bayview','together-havana']};
+ assert.equal((await call(env,'/register',{method:'POST',data})).status,201);
+ const brief=(await call(env,'/state',{cookie})).data.brief,missing=brief.missing_assessments.filter(a=>a.name==='New Feedback Demo');assert.equal(missing.length,1);assert.equal(missing[0].program_id,'nextwave');assert.equal(missing[0].phase,'start');assert.equal(brief.counts.missing_starts,1);
+ const preview=await closePreview(env,cookie);assert.equal(preview.readiness.gaps.missing_starts,1);assert.match(preview.narrative,/1 missing start assessments/);
+});
