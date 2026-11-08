@@ -1,6 +1,6 @@
 # TidePath
 
-![Young people together — the TidePath website hero](docs/assets/hero.jpg)
+![TidePath app — manage programs, groups, staff, volunteers and organization settings](docs/screenshots/workspace.jpg)
 
 **Record once. Know who needs a call. Draft weekly and quarterly reports.**
 
