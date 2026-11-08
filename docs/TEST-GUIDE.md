@@ -93,7 +93,7 @@ As Marisol, open **Participants → a child → Edit contact details** under the
 
 For local rehearsal, open Sofia Rivera, edit Rosa Rivera’s invented email/phone, save, then open Mateo Rivera to verify the same details. This changes no household or child links. CSV import still preserves canonical contact details; use this explicit edit action to correct an existing profile.
 
-## Marisol’s week and daily reminders
+## Weekly and daily reminders
 
 Overview opens the seven-day action brief. On a fresh seed: two families need contact, two sessions need attendance (one overdue), two family tasks are overdue, zero start responses and five end responses are missing, and 13 contribution entries totaling 17 hours await review. Each action shows its owner and opens the corresponding attendance, concern, assessment form or approval queue. Newly enrolled regular-program children without a baseline appear as missing start responses; optional events do not require assessments.
 
