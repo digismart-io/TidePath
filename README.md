@@ -1,111 +1,108 @@
-# TidePath · Program workspace
+# TidePath
 
-Record once. Know who needs help. Explain every number.
+**Record once. Know who needs a call. Explain every number.**
 
-A working hackathon prototype for Tidepath Family Alliance's program manager, Marisol. The application connects registration, attendance, mentoring, volunteer hours, owned follow-ups and quarterly evidence. It runs on a Cloudflare Worker with D1 and optional Workers AI drafting.
+TidePath connects family registration, attendance, mentors, volunteer hours, family follow-ups and quarterly reporting for a small youth nonprofit. It addresses **Challenge 1: From sign-up to quarterly report** for Marisol, Tidepath Family Alliance’s program manager.
 
-**Fictional demonstration only.** All family records, schools, assessments, contacts, passwords and volunteer histories are synthetic. Shared demo logins are for exploration, not real nonprofit operations. Counseling records, donation processing, donor CRM, grant accounting and QuickBooks remain outside this app.
+[Open the working app](https://tidepath-demo.go-610.workers.dev/) · [Explore the Programs website](https://digismart-io.github.io/TidePath/) · [Read the submission overview](docs/SUBMISSION.md)
 
-## Live demo
+> Hackathon prototype with fictional records only. The working source is currently on `codex/tidepath-demo`, in [draft PR #1](https://github.com/digismart-io/TidePath/pull/1) targeting `main`. The live demo is already deployed. Shared demo accounts are for exploration with invented data.
 
-- [Program workspace](https://tidepath-demo.go-610.workers.dev/)
-- [Public Programs page](https://digismart-io.github.io/TidePath/) — GitHub Pages serves `docs/` from `codex/tidepath-demo`. Its program/language chooser hands registration to the working app.
+## What it does
 
-The app and public page share the supplied navy/orange style with subdued blue-gray highlights. See [style reference](docs/STYLE-REFERENCE.md) and [design tokens](design.md).
+| Marisol’s problem | Working solution |
+| --- | --- |
+| Retyping family signups across lists | One family form, multiple children, connected household and enrollment records |
+| The same guardian appears under different names | CSV preview suggests possible matches; a manager confirms identities before import |
+| Paper attendance arrives too late | Session leaders mark students on their phones and click **Submit attendance** once |
+| Missed sessions go unnoticed | Two consecutive unexplained absences in the same regular program create an assigned follow-up |
+| Staff see a concern outside the automatic rule | Manual follow-ups with a reason, owner, due date and next action |
+| Mentor lists and volunteer hours are separate | Mentor assignment history and approved volunteer contributions share the same records |
+| Quarter-end numbers do not agree | Computed metrics, source-record drill-down, assessment entry, narrative drafting and printable reports |
+
+Each participant’s **Why a follow-up?** section explains their submitted attendance, unsubmitted sessions and existing tasks. No manager approval is needed for attendance: submission immediately updates follow-up rules and report totals. Optional family events do not trigger absence alerts.
+
+<details>
+<summary>See the follow-up explanation screen</summary>
+
+![Zoe’s program-specific attendance and follow-up explanation](docs/screenshots/followup-explanation.jpg)
+
+Fictional demonstration activity; the shared live data may change during testing.
+
+</details>
+
+## Try it
+
+Choose a role on the [sign-in screen](https://tidepath-demo.go-610.workers.dev/), then click **Sign in**. Every demo account uses `TidePath-demo-2026!`.
+
+| Account | Role | Access |
+| --- | --- | --- |
+| `marisol@tidepath.example` | Program manager | Families, participants, imports, all sessions, follow-ups, mentors, hours, assessments and reports |
+| `elena@tidepath.example` | Session leader | Harbor Mentors at Bayview |
+| `james@tidepath.example` | Session leader | Assigned Bayview safety, Little Havana wellbeing and community-event sessions |
+| `priya@tidepath.example` | Session leader | Assigned Riverside safety, West Little River wellbeing and community-event sessions |
+
+API permissions enforce these boundaries. The family registration form is public and does not disclose existing household identities. Only a manager can confirm links to an existing household.
+
+A fresh seed contains **100 children, 70 households, five program profiles, 130 distinct child–program enrollments, 66 sessions and 15 volunteers**. Counseling is catalog-only. The scenario date is September 24, 2026, within the July–September quarter; reporting is provisional. The shared live demo changes as people test it.
+
+Follow the [three-minute walkthrough and rehearsal guide](docs/TEST-GUIDE.md). For CSV matching, use **Participants → Import CSV** and its downloadable messy example.
 
 ## Run locally
 
-Requires Node.js 24 or newer.
+Requires Node.js 24 or newer and npm.
 
 ```sh
-npm install
+git clone --branch codex/tidepath-demo https://github.com/digismart-io/TidePath.git
+cd TidePath
+npm ci
 npm run db:reset
 npm run dev
 ```
 
-Open the URL printed by the server, normally http://localhost:8787. The local development server uses Node's built-in SQLite and a D1-compatible adapter. The **same Worker request handlers** run locally and on Cloudflare; local development does not call paid AI services. SQLite may print Node's experimental-feature warning.
+Open `http://localhost:8787`. The local app runs the same Worker handlers against persistent SQLite, without calling a hosted AI service. Template drafting is labeled explicitly. Node may print an experimental SQLite notice.
 
-## Explore the demo
-
-Choose a demo role on the sign-in screen, then select **Sign in**. All four fictional accounts use `TidePath-demo-2026!`.
-
-| Login | Role | Access |
-| --- | --- | --- |
-| `marisol@tidepath.example` | Program manager | Participant/family history, all rosters, follow-ups, mentors, hours and reports |
-| `elena@tidepath.example` | Session leader | Harbor Mentors, Bayview rosters only |
-| `james@tidepath.example` | Session leader | Assigned Bayview safety, Little Havana wellbeing and community-event rosters |
-| `priya@tidepath.example` | Session leader | Assigned Riverside safety, West Little River wellbeing and community-event rosters |
-
-Roles are enforced in the Worker API, not just in the navigation. The four logins represent test roles, not TidePath's complete nine-person staffing structure. Passwords are PBKDF2 hashed; sessions are opaque, server-stored, expiring HttpOnly cookies. Public registration never returns existing family identities. Shared accounts and published demo credentials must be replaced before any real-data pilot.
-
-Family registration collects guardian details once and saves up to ten children together, with individual ages and program groups. Adding/removing children and changing form language preserve entered details. Validation and saving apply to the whole family.
-
-## Included
-
-- Five complete service profiles: mentoring, family counseling, safety workshops, mental health workshops and community events. Counseling is catalog-only; its client records remain in the secure system.
-- One hundred students, 70 households, 130 distinct child–program enrollments, fifteen volunteer records and 66 sessions in one fictional quarter.
-- Separate households and guardians, preferred contact language and stable student IDs.
-- English, Spanish and Haitian Creole family registration labels and contact templates. The main staff interface is English; full localization is not claimed.
-- Phone-friendly attendance with one Submit attendance action. Complete submissions immediately update follow-ups and reporting; no review or approval step. Corrections keep an audit history and concurrent changes are checked.
-- Two consecutive unexplained absences trigger one assigned follow-up. Message attempts, replies, ownership, next steps and resolution are separate events. Return to attendance does not silently resolve a concern.
-- Mentor matches retain history when reassigned; volunteer hours require approval and cannot duplicate a volunteer/session pair.
-- Participant details explain the automatic follow-up rule, latest submitted attendance, unsubmitted dates and existing tasks; managers can create manual concerns with ownership and due dates.
-- Managers can enter voluntary 1–5 start/end self-assessments for enrolled mentoring/workshop participants. Corrections require confirmation, preserve audit history and update report calculations.
-- Quarterly totals with source-record drill-down, downloadable JSON evidence, a printable view and reviewed narrative drafting.
-- PWA manifest and an offline application shell. Offline **attendance synchronization is not implemented**; API records are never cached by the service worker.
-
-## Repeatable testing
+`npm run db:reset` replaces the **local** demo database. Stop the local server before resetting, restart it afterward, and sign in again. It does not change the hosted demo.
 
 ```sh
-npm test
 npm run check
-npm run db:reset
 ```
 
-`db:reset` resets only `.local/tidepath.sqlite`. Restart the local server after resetting so it opens the fresh database, and sign in again. It does not touch Cloudflare.
+The check includes JavaScript syntax validation and **40 integration tests** covering permissions, attendance submission and concurrency, family registration, follow-up rules, assessments, CSV matching, transaction rollback, repeat imports and report reconciliation. Tests use isolated in-memory databases.
 
-`seed/demo.sql` and `seed/expected.json` are produced by `npm run seed:generate`. The expected totals are computed independently from generated rows and checked against the report API. Integration tests cover authorization, CSRF, attendance completeness, simultaneous saves, cancellation, transfer history, hour approval, registration, follow-up lifecycle, and AI fallback.
+## Architecture and AI
 
-The scenario date is September 24, 2026. The report is provisional: two rosters remain unfinished and the quarter ends September 30. Actual audit/contact timestamps use server time. Explore [the program catalog](docs/PROGRAM-CATALOG.md). See [the testing and demo guide](docs/TEST-GUIDE.md).
+A plain HTML/CSS/JavaScript PWA calls a Cloudflare Worker API backed by D1. GitHub Pages serves the public Programs website; its chooser hands program and language selections to the registration app. See [architecture and data flow](docs/ARCHITECTURE.md).
 
-## Deploy to your Cloudflare account
+Workers AI runs Meta’s `@cf/meta/llama-3.3-70b-instruct-fp8-fast` to draft guardian messages and qualitative report notes. Code calculates report numbers, validates records and applies follow-up rules. Staff review generated text. AI does not merge identities, send messages or resolve tasks autonomously.
 
-`wrangler.jsonc` binds the dedicated `tidepath-demo` D1 database and Workers AI. The current database ID belongs to this participant's demo account. A fork must create its own database and replace that ID.
+The hosted model uses the **Cloudflare account that deploys the Worker**, not a contributor’s ChatGPT subscription. Cloudflare includes a daily AI allowance; hosted inference is not unlimited free use. See [Workers AI pricing](https://developers.cloudflare.com/workers-ai/platform/pricing/) and the [Llama model license](https://github.com/meta-llama/llama-models/blob/main/models/llama3_3/LICENSE). If AI is unavailable, the app returns a labeled template.
 
-```sh
-wrangler login
-wrangler d1 create tidepath-demo
-# Put the returned database_id in wrangler.jsonc before continuing.
-wrangler d1 migrations apply tidepath-demo --remote
-wrangler d1 execute tidepath-demo --remote --file seed/demo.sql
-npm run deploy
-```
+## Deploy your own copy
 
-Run the seed once against an empty schema. Do not rerun the insert-only seed against populated tables. For this specific disposable hosted database, the guarded reset command restores the fictional quarter:
+A branch or fork copies code and public configuration, **not Cloudflare login credentials**. Create your own D1 database, update the configuration, and change the Programs page links to your deployed app. The committed database identifier and demo URLs refer to the original hackathon deployment.
 
-```sh
-npm run demo:reset:remote -- --confirm=tidepath-demo
-```
+Follow the [deployment guide](docs/DEPLOYMENT.md). It covers local credentials, optional AI, GitHub Pages and the distinction between a new-account setup and updating an existing deployment.
 
-This deletes demo changes, contacts and login sessions from the exact configured hackathon database. It refuses other database IDs and non-demo mode. It does not delete the database, Worker, or unrelated Cloudflare resources.
+## Limits of this prototype
 
-## AI behavior
+- CSV imports cover signups and enrollment: 20 rows / 20 KB per batch, with explicit identity review. There is no direct Google Sheets sync, historical attendance import or destructive merge of existing database profiles.
+- Contacts are simulated. The queue tracks owners and overdue tasks, but there is no outbound email/SMS/WhatsApp delivery or scheduled reminder/escalation service.
+- The PWA has an offline shell; attendance requires connectivity and does not synchronize offline.
+- Reports use the configured demo quarter and current records. Immutable issued reports and a quarter-selection workflow are not implemented.
+- Assessments are voluntary, non-clinical program feedback. Descriptive changes do not establish program effectiveness. Counseling, donor and financial records remain in their existing systems.
+- Demo roles and public passwords must be replaced before a real-data pilot. Enrollment/waitlist policy, concurrent capacity enforcement, translation review, retention and organizational access provisioning remain production work.
 
-The deployed Worker uses `@cf/meta/llama-3.3-70b-instruct-fp8-fast` through the `AI` binding. The report's numeric sections and definitions are assembled by code; AI receives qualitative issue flags and adds staff-review notes. AI notes containing digits are rejected in favor of the verified template. Follow-up drafting receives only the selected task's relevant program context. Counseling notes are neither stored nor read. AI responds to a staff action; it does not autonomously send or resolve anything. Generated wording can be inaccurate and requires human review against the visible evidence.
+Time savings and real-world outcomes have not been measured. See [the source brief and boundaries](docs/PROJECT-BRIEF.md).
 
-When AI is unavailable or unconfigured, a deterministic template is shown and explicitly labeled **Template**. Live requests consume Cloudflare Workers AI allowance/usage; see your account's limits. Draft generation is not presented as a multi-agent orchestration system.
+## Documentation
 
-## Deferred scope and production work
+- [Submission overview and challenge fit](docs/SUBMISSION.md)
+- [Demo walkthrough, expected totals and tests](docs/TEST-GUIDE.md)
+- [Deployment and fork setup](docs/DEPLOYMENT.md)
+- [Architecture, records and API responsibilities](docs/ARCHITECTURE.md)
+- [Program catalog](docs/PROGRAM-CATALOG.md)
+- [Design reference and image credits](docs/STYLE-REFERENCE.md)
+- [Design tokens](design.md)
 
-Manager-reviewed CSV signup import is implemented: preview up to 20 rows, inspect possible identity matches, explicitly choose existing/new guardians and children, and import atomically. Stable source IDs make identical reimports safe. This links imported variants to confirmed identities; it does not destructively merge already-existing database profiles or directly synchronize Google Sheets. Seeded records remain labeled as synthetic fixtures. Existing systems remain the owners of clinical, donor and financial records. See [the source brief and boundaries](docs/PROJECT-BRIEF.md).
-
-Before a real-data pilot: replace demo accounts with organizational identity and provisioning; agree on data retention and staff access; review translations with speakers; formalize enrollment/waitlist rules and concurrent capacity enforcement; add reliable scheduled escalation and delivery integrations if needed. The current follow-up queue identifies overdue tasks; it does not run an external notification scheduler. Quarter reports reflect live data; immutable issued-report snapshots are future work.
-
-## Sources
-
-- [Cloudflare D1](https://developers.cloudflare.com/d1/)
-- [D1 foreign keys](https://developers.cloudflare.com/d1/sql-api/foreign-keys/)
-- [Worker static assets binding](https://developers.cloudflare.com/workers/static-assets/binding/)
-- [Workers AI binding](https://developers.cloudflare.com/workers-ai/configuration/bindings/)
-
-MIT license.
+Software: [MIT license](LICENSE). Third-party images and the hosted AI model retain their respective licenses.

@@ -1,6 +1,6 @@
 # TidePath rehearsal and test guide
 
-All names and records are fictional. Restore the seed between rehearsals if you want identical numbers.
+All names and records are fictional. Baseline counts below describe a fresh seed, not necessarily the shared live app. Use a local reset between rehearsals if you want identical numbers.
 
 ## Baseline
 
@@ -29,8 +29,7 @@ The school transfer produces 131 enrollment-period rows, but only 130 distinct c
 
 | Scenario | Expected behavior |
 | --- | --- |
-| Save half a roster as draft | Unmarked stays distinct from absent; draft roster excluded from report |
-| Submit with an unmarked child | Clear validation error, no submission |
+| Submit with an unmarked child | Clear validation error; no attendance is saved and report totals stay unchanged |
 | Two browsers save the same version | Second stale save receives a conflict and must reload |
 | Open another teacher's roster | Server returns forbidden |
 | View the cancelled Bayview workshop on August 5 | Read-only; no absence contribution |
