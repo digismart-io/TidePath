@@ -12,6 +12,6 @@ Create a branch, keep changes focused, and open a pull request describing the pr
 
 Keep `.env.example`, deployment examples and documentation aligned with new settings. Never commit passwords, session cookies, private contact data or Cloudflare credentials. Use your own Cloudflare database and `docs/site-config.js` URL for independent deployments. Leave the original remote demo reset's allowlist intact.
 
-The proposed GitHub Actions workflow is documented in `docs/ci-checks.yml` if account authorization prevents installing it. Once installed, require its status checks through branch protection if you want GitHub to block failing merges.
+GitHub Actions runs `npm run check` on Node 22.13.1 and Node 24 for pushes and pull requests; see [.github/workflows/check.yml](.github/workflows/check.yml). Both checks must pass before merging to the original repository’s `main`. Fork maintainers should configure their own required checks; branch protection settings are not copied with repository files.
 
 Report vulnerabilities using [SECURITY.md](SECURITY.md), not a public issue with exploit details. Contributions are under the repository's MIT license; external image and model licenses still apply.
